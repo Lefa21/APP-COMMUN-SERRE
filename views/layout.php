@@ -123,16 +123,6 @@
                         <li class="nav-item">
                             <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=home">Tableau de Bord</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor">Capteurs</a>
-                        </li>
-                        
-                        <!-- ACTIONNEURS : Seulement pour les admins -->
-                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator">Actionneurs</a>
-                            </li>
-                        <?php endif; ?>
                         
                         <!-- ADMINISTRATION : Seulement pour les admins -->
                         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>

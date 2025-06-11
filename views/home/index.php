@@ -43,9 +43,14 @@
 </div>
 
 <!-- Capteurs -->
-<div class="row mb-4">
+<div class="row mb-4 mt-4">
     <div class="col-12">
-        <h3>🌡️ État des Capteurs</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>🌡️ État des Capteurs</h3>
+            <a href="<?= BASE_URL ?>?controller=sensor&action=manage" class="btn btn-outline-primary">
+                Voir tous les capteurs
+            </a>
+        </div>
         <p class="text-muted">Données en temps réel de toutes les équipes</p>
     </div>
 </div>
@@ -164,7 +169,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h3>⚡ Contrôle des Actionneurs</h3>
-                <a href="<?= BASE_URL ?>?controller=actuator" class="btn btn-outline-primary">
+                <a href="<?= BASE_URL ?>?controller=actuator&action=manage" class="btn btn-outline-primary">
                     Voir tous les actionneurs
                 </a>
             </div>

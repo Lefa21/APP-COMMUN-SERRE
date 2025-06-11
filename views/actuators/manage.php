@@ -3,8 +3,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?= BASE_URL ?>?controller=home">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>?controller=actuator">Actionneurs</a></li>
-                <li class="breadcrumb-item active">Gestion</li>
+                <li class="breadcrumb-item active">Gestion des Actionneurs</li>
             </ol>
         </nav>
     </div>
@@ -13,7 +12,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
-            <h1>⚙️ Gestion des Actionneurs</h1>
+            <h1>⚡ Gestion des Actionneurs</h1>
             <div class="btn-group">
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addActuatorModal">
                     <i class="bi bi-plus-circle"></i> Ajouter un actionneur
@@ -27,6 +26,22 @@
             </div>
         </div>
         <p class="text-muted">Gérez et contrôlez tous les actionneurs du système</p>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <div class="d-flex align-items-center">
+                <span class="me-2">ℹ️</span>
+                <div>
+                    <strong>Instructions:</strong>
+                    En tant qu'administrateur, vous pouvez contrôler tous les actionneurs de toutes les équipes.
+                    Utilisez cette interface pour configurer, surveiller et actionner les équipements connectés.
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -105,129 +120,317 @@
     </div>
 </div>
 
-<!-- Tableau des actionneurs -->
+<!-- Grille des actionneurs avec contrôles -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h3>🎛️ Contrôle des Actionneurs</h3>
+        <p class="text-muted">Interface de contrôle direct des équipements</p>
+    </div>
+</div>
+
 <div class="row">
+    <?php if (empty($actuators)): ?>
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h5>Aucun actionneur disponible</h5>
+                <p>
+                    Aucun actionneur n'a été configuré. 
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addActuatorModal">
+                        Ajoutez-en un maintenant
+                    </button>.
+                </p>
+            </div>
+        </div>
+    <?php else: ?>
+        <?php foreach ($actuators as $actuator): ?>
+            <div class="col-lg-4 col-md-6 mb-4 actuator-card" 
+                 data-team="<?= $actuator['team_id'] ?>" 
+                 data-type="<?= $actuator['type'] ?>" 
+                 data-state="<?= $actuator['current_state'] ?>">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
+                        <span class="badge bg-info"><?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?></span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Type et icône -->
+                        <div class="d-flex align-items-center mb-3">
+                            <?php
+                            $icon = '';
+                            $description = '';
+                            switch ($actuator['type']) {
+                                case 'irrigation': 
+                                    $icon = '💧'; 
+                                    $description = 'Système d\'arrosage automatique';
+                                    break;
+                                case 'ventilation': 
+                                    $icon = '🌪️'; 
+                                    $description = 'Ventilation et circulation d\'air';
+                                    break;
+                                case 'heating': 
+                                    $icon = '🔥'; 
+                                    $description = 'Système de chauffage';
+                                    break;
+                                case 'lighting': 
+                                    $icon = '💡'; 
+                                    $description = 'Éclairage artificiel';
+                                    break;
+                                case 'window': 
+                                    $icon = '🪟'; 
+                                    $description = 'Ouverture/fermeture automatique';
+                                    break;
+                                default:
+                                    $icon = '⚡';
+                                    $description = 'Actionneur générique';
+                            }
+                            ?>
+                            <span class="me-3" style="font-size: 2rem;"><?= $icon ?></span>
+                            <div>
+                                <h6 class="mb-0"><?= ucfirst($actuator['type']) ?></h6>
+                                <small class="text-muted"><?= $description ?></small>
+                            </div>
+                        </div>
+                        
+                        <!-- État actuel -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="text-muted">État actuel:</span>
+                                <div class="d-flex align-items-center">
+                                    <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2" id="status-<?= $actuator['id'] ?>"></span>
+                                    <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>" id="state-text-<?= $actuator['id'] ?>">
+                                        <?= $actuator['current_state'] ? 'ACTIF' : 'INACTIF' ?>
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Informations techniques -->
+                        <div class="mb-3">
+                            <small class="text-muted d-block">
+                                ID: #<?= $actuator['id'] ?> | 
+                                Équipe: <?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?>
+                            </small>
+                        </div>
+                        
+                        <!-- Contrôles -->
+                        <div class="d-grid gap-2">
+                            <?php if ($actuator['current_state']): ?>
+                                <button 
+                                    class="btn btn-danger"
+                                    id="toggle-btn-<?= $actuator['id'] ?>"
+                                    data-actuator-id="<?= $actuator['id'] ?>"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')"
+                                    <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
+                                    <i class="bi bi-stop-circle"></i> Arrêter
+                                </button>
+                            <?php else: ?>
+                                <button 
+                                    class="btn btn-success"
+                                    id="toggle-btn-<?= $actuator['id'] ?>"
+                                    data-actuator-id="<?= $actuator['id'] ?>"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')"
+                                    <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
+                                    <i class="bi bi-play-circle"></i> Démarrer
+                                </button>
+                            <?php endif; ?>
+                            
+                            <!-- Boutons de gestion -->
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-warning btn-sm" 
+                                        onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <?php if (!$actuator['is_active']): ?>
+                            <div class="mt-2">
+                                <small class="text-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Actionneur désactivé
+                                </small>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Footer avec dernière action -->
+                    <div class="card-footer text-muted">
+                        <small>
+                            <i class="bi bi-clock"></i> 
+                            Dernière modification: <span id="last-update-<?= $actuator['id'] ?>">Inconnue</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
+
+<!-- Tableau des actionneurs (pour gestion avancée) -->
+<div class="row mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">🎛️ Panneau de contrôle</h5>
+                <h5 class="mb-0">🎛️ Panneau de contrôle avancé</h5>
             </div>
             <div class="card-body">
-                <?php if (empty($actuators)): ?>
-                    <div class="text-center py-4">
-                        <i class="bi bi-gear" style="font-size: 3rem; color: #ccc;"></i>
-                        <h5 class="mt-3">Aucun actionneur configuré</h5>
-                        <p class="text-muted">Commencez par ajouter votre premier actionneur</p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addActuatorModal">
-                            <i class="bi bi-plus-circle"></i> Ajouter un actionneur
-                        </button>
-                    </div>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="actuatorsTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nom</th>
-                                    <th>Type</th>
-                                    <th>Équipe</th>
-                                    <th>État</th>
-                                    <th>Statut</th>
-                                    <th>Dernière action</th>
-                                    <th>Contrôles</th>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="actuatorsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Type</th>
+                                <th>Équipe</th>
+                                <th>État</th>
+                                <th>Statut</th>
+                                <th>Dernière action</th>
+                                <th>Contrôles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($actuators as $actuator): ?>
+                                <tr class="actuator-row" id="actuator-row-<?= $actuator['id'] ?>">
+                                    <td><strong>#<?= $actuator['id'] ?></strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <?php
+                                            $icon = '';
+                                            switch ($actuator['type']) {
+                                                case 'irrigation': $icon = '💧'; break;
+                                                case 'ventilation': $icon = '🌪️'; break;
+                                                case 'heating': $icon = '🔥'; break;
+                                                case 'lighting': $icon = '💡'; break;
+                                                case 'window': $icon = '🪟'; break;
+                                                default: $icon = '⚡';
+                                            }
+                                            ?>
+                                            <span class="me-2"><?= $icon ?></span>
+                                            <?= htmlspecialchars($actuator['name']) ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            <?= ucfirst($actuator['type']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <?= htmlspecialchars($actuator['team_name'] ?? 'Non assignée') ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2"></span>
+                                            <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>">
+                                                <?= $actuator['current_state'] ? 'ON' : 'OFF' ?>
+                                            </strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?= $actuator['is_active'] ? 'success' : 'secondary' ?>">
+                                            <?= $actuator['is_active'] ? 'Actif' : 'Inactif' ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" id="last-action-<?= $actuator['id'] ?>">
+                                            Inconnue
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <?php if ($actuator['is_active']): ?>
+                                                <button class="btn <?= $actuator['current_state'] ? 'btn-danger' : 'btn-success' ?>" 
+                                                        onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['current_state'] ? 'OFF' : 'ON' ?>')">
+                                                    <i class="bi bi-<?= $actuator['current_state'] ? 'stop' : 'play' ?>-circle"></i>
+                                                    <?= $actuator['current_state'] ? 'Arrêter' : 'Démarrer' ?>
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="bi bi-ban"></i> Désactivé
+                                                </button>
+                                            <?php endif; ?>
+                                            
+                                            <button class="btn btn-outline-warning btn-sm" 
+                                                    onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($actuators as $actuator): ?>
-                                    <tr data-team="<?= $actuator['team_id'] ?>" 
-                                        data-type="<?= $actuator['type'] ?>" 
-                                        data-state="<?= $actuator['current_state'] ?>"
-                                        class="actuator-row" id="actuator-row-<?= $actuator['id'] ?>">
-                                        <td><strong>#<?= $actuator['id'] ?></strong></td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <?php
-                                                $icon = '';
-                                                switch ($actuator['type']) {
-                                                    case 'irrigation': $icon = '💧'; break;
-                                                    case 'ventilation': $icon = '🌪️'; break;
-                                                    case 'heating': $icon = '🔥'; break;
-                                                    case 'lighting': $icon = '💡'; break;
-                                                    case 'window': $icon = '🪟'; break;
-                                                    default: $icon = '⚡';
-                                                }
-                                                ?>
-                                                <span class="me-2"><?= $icon ?></span>
-                                                <?= htmlspecialchars($actuator['name']) ?>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">
-                                                <?= ucfirst($actuator['type']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                <?= htmlspecialchars($actuator['team_name'] ?? 'Non assignée') ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2" 
-                                                      id="status-<?= $actuator['id'] ?>"></span>
-                                                <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>" 
-                                                        id="state-text-<?= $actuator['id'] ?>">
-                                                    <?= $actuator['current_state'] ? 'ON' : 'OFF' ?>
-                                                </strong>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-<?= $actuator['is_active'] ? 'success' : 'secondary' ?>">
-                                                <?= $actuator['is_active'] ? 'Actif' : 'Inactif' ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <small class="text-muted" id="last-action-<?= $actuator['id'] ?>">
-                                                Inconnue
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <?php if ($actuator['is_active']): ?>
-                                                    <button class="btn <?= $actuator['current_state'] ? 'btn-danger' : 'btn-success' ?>" 
-                                                            id="toggle-btn-<?= $actuator['id'] ?>"
-                                                            onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['current_state'] ? 'OFF' : 'ON' ?>')"
-                                                            data-actuator-id="<?= $actuator['id'] ?>">
-                                                        <i class="bi bi-<?= $actuator['current_state'] ? 'stop' : 'play' ?>-circle"></i>
-                                                        <?= $actuator['current_state'] ? 'Arrêter' : 'Démarrer' ?>
-                                                    </button>
-                                                <?php else: ?>
-                                                    <button class="btn btn-secondary btn-sm" disabled>
-                                                        <i class="bi bi-ban"></i> Désactivé
-                                                    </button>
-                                                <?php endif; ?>
-                                                
-                                                <button class="btn btn-outline-warning btn-sm" 
-                                                        onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger btn-sm" 
-                                                        onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Section d'aide et conseils -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">💡 Aide et Conseils</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔒 Sécurité</h6>
+                        <ul class="list-unstyled">
+                            <li>• N'activez les actionneurs que si nécessaire</li>
+                            <li>• Vérifiez l'état des capteurs avant l'activation</li>
+                            <li>• En cas de problème, arrêtez immédiatement</li>
+                            <li>• Utilisez l'arrêt d'urgence en cas de danger</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🌍 Éco-responsabilité</h6>
+                        <ul class="list-unstyled">
+                            <li>• Optimisez l'usage selon les besoins réels</li>
+                            <li>• Évitez les activations inutiles</li>
+                            <li>• Surveillez la consommation énergétique</li>
+                            <li>• Planifiez les actions pour maximiser l'efficacité</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>⚙️ Gestion</h6>
+                        <ul class="list-unstyled">
+                            <li>• Configurez les actionneurs par équipe</li>
+                            <li>• Surveillez les logs d'activité</li>
+                            <li>• Effectuez des tests réguliers</li>
+                            <li>• Documentez les interventions</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🚨 Dépannage</h6>
+                        <ul class="list-unstyled">
+                            <li>• Vérifiez les connexions en cas de problème</li>
+                            <li>• Consultez les logs pour diagnostiquer</li>
+                            <li>• Redémarrez l'actionneur si nécessaire</li>
+                            <li>• Contactez l'équipe technique si persistant</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Conserver tous les modals existants -->
 <!-- Modal Ajouter un actionneur -->
 <div class="modal fade" id="addActuatorModal" tabindex="-1" aria-labelledby="addActuatorModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -371,36 +574,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <hr>
-                
-                <h6>📋 Répartition par équipe</h6>
-                <div class="row">
-                    <?php
-                    $actuatorsByTeam = [];
-                    foreach ($actuators as $actuator) {
-                        $teamName = $actuator['team_name'] ?? 'Non assignée';
-                        if (!isset($actuatorsByTeam[$teamName])) {
-                            $actuatorsByTeam[$teamName] = ['total' => 0, 'active' => 0];
-                        }
-                        $actuatorsByTeam[$teamName]['total']++;
-                        if ($actuator['current_state']) {
-                            $actuatorsByTeam[$teamName]['active']++;
-                        }
-                    }
-                    ?>
-                    <?php foreach ($actuatorsByTeam as $teamName => $stats): ?>
-                        <div class="col-md-4 mb-2">
-                            <div class="card card-body text-center">
-                                <h6><?= htmlspecialchars($teamName) ?></h6>
-                                <p class="mb-0">
-                                    <span class="text-success"><?= $stats['active'] ?></span> / 
-                                    <span class="text-primary"><?= $stats['total'] ?></span>
-                                </p>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -410,7 +583,8 @@
 </div>
 
 <script>
-// Données des actionneurs pour JavaScript
+// Reprendre tout le JavaScript existant de la page manage.php
+// Variables globales
 const actuatorsData = <?= json_encode($actuators) ?>;
 
 // Filtrage des actionneurs
@@ -419,23 +593,23 @@ function filterActuators() {
     const typeFilter = document.getElementById('typeFilter').value;
     const stateFilter = document.getElementById('stateFilter').value;
     
-    const rows = document.querySelectorAll('.actuator-row');
+    const cards = document.querySelectorAll('.actuator-card');
     let visibleCount = 0;
     
-    rows.forEach(row => {
-        const team = row.dataset.team;
-        const type = row.dataset.type;
-        const state = row.dataset.state;
+    cards.forEach(card => {
+        const team = card.dataset.team;
+        const type = card.dataset.type;
+        const state = card.dataset.state;
         
         const teamMatch = !teamFilter || team === teamFilter;
         const typeMatch = !typeFilter || type === typeFilter;
         const stateMatch = !stateFilter || state === stateFilter;
         
         if (teamMatch && typeMatch && stateMatch) {
-            row.style.display = '';
+            card.style.display = '';
             visibleCount++;
         } else {
-            row.style.display = 'none';
+            card.style.display = 'none';
         }
     });
 }
@@ -503,9 +677,8 @@ function exportActuatorLogs() {
     window.open('<?= BASE_URL ?>?controller=actuator&action=exportLogs', '_blank');
 }
 
-// Override de la fonction toggleActuator pour mettre à jour l'interface
-const originalToggleActuator = window.toggleActuator;
-window.toggleActuator = function(actuatorId, action, callback) {
+// Fonction principale pour actionner un actionneur
+function toggleActuator(actuatorId, action, callback) {
     const formData = new FormData();
     formData.append('actuator_id', actuatorId);
     formData.append('action', action);
@@ -527,6 +700,12 @@ window.toggleActuator = function(actuatorId, action, callback) {
                 lastActionElement.textContent = new Date().toLocaleTimeString('fr-FR');
             }
             
+            // Mettre à jour l'heure de modification dans les cartes
+            const lastUpdateElement = document.getElementById(`last-update-${actuatorId}`);
+            if (lastUpdateElement) {
+                lastUpdateElement.textContent = new Date().toLocaleString('fr-FR');
+            }
+            
             if (callback) callback();
         } else {
             showNotification(data.error, 'error');
@@ -535,51 +714,187 @@ window.toggleActuator = function(actuatorId, action, callback) {
     .catch(error => {
         showNotification('Erreur de communication', 'error');
     });
-};
+}
 
 // Mettre à jour l'interface d'un actionneur
 function updateActuatorInterface(actuatorId, newState) {
-    const button = document.getElementById(`toggle-btn-${actuatorId}`);
-    const status = document.getElementById(`status-${actuatorId}`);
-    const stateText = document.getElementById(`state-text-${actuatorId}`);
-    const row = document.getElementById(`actuator-row-${actuatorId}`);
+    // Mettre à jour les boutons dans les cartes
+    const cardButton = document.querySelector(`[data-actuator-id="${actuatorId}"]`);
+    const tableButton = document.querySelector(`#actuator-row-${actuatorId} .btn-group .btn:first-child`);
     
-    if (button) {
-        if (newState) {
-            button.className = 'btn btn-danger';
-            button.innerHTML = '<i class="bi bi-stop-circle"></i> Arrêter';
-            button.onclick = () => toggleActuator(actuatorId, 'OFF');
-        } else {
-            button.className = 'btn btn-success';
-            button.innerHTML = '<i class="bi bi-play-circle"></i> Démarrer';
-            button.onclick = () => toggleActuator(actuatorId, 'ON');
+    // Mettre à jour les indicateurs de statut
+    const statusIndicators = document.querySelectorAll(`#status-${actuatorId}`);
+    const stateTexts = document.querySelectorAll(`#state-text-${actuatorId}`);
+    
+    // Mise à jour des boutons
+    [cardButton, tableButton].forEach(button => {
+        if (button) {
+            if (newState) {
+                button.className = button.className.replace('btn-success', 'btn-danger');
+                button.innerHTML = '<i class="bi bi-stop-circle"></i> Arrêter';
+                button.onclick = () => toggleActuator(actuatorId, 'OFF');
+            } else {
+                button.className = button.className.replace('btn-danger', 'btn-success');
+                button.innerHTML = '<i class="bi bi-play-circle"></i> Démarrer';
+                button.onclick = () => toggleActuator(actuatorId, 'ON');
+            }
         }
-    }
+    });
     
-    if (status) {
-        status.className = `status-indicator ${newState ? 'status-on' : 'status-off'} me-2`;
-    }
+    // Mise à jour des indicateurs de statut
+    statusIndicators.forEach(indicator => {
+        if (indicator) {
+            indicator.className = `status-indicator ${newState ? 'status-on' : 'status-off'} me-2`;
+        }
+    });
     
-    if (stateText) {
-        stateText.textContent = newState ? 'ON' : 'OFF';
-        stateText.className = newState ? 'text-success' : 'text-secondary';
-    }
+    // Mise à jour des textes d'état
+    stateTexts.forEach(text => {
+        if (text) {
+            text.textContent = newState ? 'ACTIF' : 'INACTIF';
+            text.className = newState ? 'text-success' : 'text-secondary';
+        }
+    });
     
-    if (row) {
-        row.dataset.state = newState ? '1' : '0';
+    // Mettre à jour l'attribut data-state des cartes
+    const card = document.querySelector(`[data-actuator-id="${actuatorId}"]`)?.closest('.actuator-card');
+    if (card) {
+        card.dataset.state = newState ? '1' : '0';
     }
 }
 
-// Mettre à jour les dernières actions au chargement
+// Fonction pour simuler un actionneur (utile pour les tests)
+function simulateActuator(actuatorId) {
+    // Alterner l'état pour la simulation
+    const button = document.querySelector(`[data-actuator-id="${actuatorId}"]`);
+    const currentAction = button.textContent.includes('Démarrer') ? 'ON' : 'OFF';
+    
+    if (confirm('Voulez-vous simuler l\'action sur cet actionneur ?')) {
+        toggleActuator(actuatorId, currentAction);
+    }
+}
+
+// Fonction d'affichage des notifications
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 80px; right: 20px; z-index: 1050;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) alert.remove();
+    }, 3000);
+}
+
+// Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-    // Simuler des heures d'action récentes
+    // Mettre à jour les heures de dernière modification au chargement
     actuatorsData.forEach(actuator => {
         const lastActionElement = document.getElementById(`last-action-${actuator.id}`);
+        const lastUpdateElement = document.getElementById(`last-update-${actuator.id}`);
+        
         if (lastActionElement) {
             const randomMinutes = Math.floor(Math.random() * 60);
             const time = new Date(Date.now() - randomMinutes * 60000);
             lastActionElement.textContent = time.toLocaleTimeString('fr-FR');
         }
+        
+        if (lastUpdateElement) {
+            const randomMinutes = Math.floor(Math.random() * 120);
+            const time = new Date(Date.now() - randomMinutes * 60000);
+            lastUpdateElement.textContent = time.toLocaleString('fr-FR');
+        }
     });
 });
 </script>
+
+<style>
+/* Styles spécifiques aux actionneurs */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.btn {
+    transition: all 0.2s ease;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+.status-on {
+    background-color: #28a745;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.status-off {
+    background-color: #6c757d;
+    opacity: 0.7;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.actuator-card {
+    transition: all 0.3s ease;
+}
+
+.actuator-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Mode sombre pour l'éco-responsabilité */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .card-header {
+        background-color: #404040;
+        border-color: #555;
+    }
+}
+
+/* Optimisation éco-responsable */
+@media (prefers-reduced-motion: reduce) {
+    .card, .actuator-card {
+        transition: none;
+    }
+    
+    .status-indicator {
+        animation: none !important;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn-group .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
