@@ -109,7 +109,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="<?= BASE_URL ?>">
+            <a class="navbar-brand" href="http://localhost/APP-COMMUN-SERRE/">
                 🌱 Serres Connectées
             </a>
             
@@ -121,13 +121,13 @@
                 <ul class="navbar-nav me-auto">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= BASE_URL ?>?controller=home">Tableau de Bord</a>
+                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=home">Tableau de Bord</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= BASE_URL ?>?controller=sensor">Capteurs</a>
+                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor">Capteurs</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= BASE_URL ?>?controller=actuator">Actionneurs</a>
+                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator">Actionneurs</a>
                         </li>
                         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                             <li class="nav-item dropdown">
@@ -135,9 +135,8 @@
                                     Administration
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=actuator&action=manage">Gérer Actionneurs</a></li>
-                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=sensor&action=manage">Gérer Capteurs</a></li>
-                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=admin&action=users">Utilisateurs</a></li>
+                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator&action=manage">Gérer Actionneurs</a></li>
+                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor&action=manage">Gérer Capteurs</a></li>
                                 </ul>
                             </li>
                         <?php endif; ?>
@@ -152,17 +151,15 @@
                                 <span class="eco-badge">Éco</span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=profile">Mon Profil</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=auth&action=logout">Déconnexion</a></li>
+                                <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=logout">Déconnexion</a></li>
                             </ul>
                         </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= BASE_URL ?>?controller=auth&action=login">Connexion</a>
+                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=login">Connexion</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= BASE_URL ?>?controller=auth&action=register">Inscription</a>
+                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=register">Inscription</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -180,8 +177,7 @@
         <div class="container">
             <p class="mb-2">🌍 Site éco-conçu - Consommation optimisée</p>
             <small class="text-muted">
-                Projet Serres Connectées - <?= date('Y') ?> | 
-                <a href="<?= BASE_URL ?>?controller=eco&action=report" class="text-decoration-none">Rapport Éco-responsable</a>
+                Projet Serres Connectées - <?= date('Y') ?>
             </small>
         </div>
     </footer>
@@ -193,10 +189,9 @@
     <script>
         // Optimisation: Chargement différé des scripts non critiques
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-refresh des données toutes les 30 secondes (optimisé pour réduire la bande passante)
+            // Auto-refresh des données toutes les 30 secondes
             if (window.location.search.includes('controller=home') || window.location.search === '') {
                 setInterval(function() {
-                    // Refresh seulement si la page est visible (économie d'énergie)
                     if (!document.hidden) {
                         refreshSensorData();
                     }
@@ -204,30 +199,19 @@
             }
         });
         
-        // Fonction pour rafraîchir les données des capteurs via AJAX
-        function refreshSensorData() {
-            fetch('<?= BASE_URL ?>?controller=api&action=sensors')
-                .then(response => response.json())
-                .then(data => {
-                    updateSensorCards(data);
-                })
-                .catch(error => console.log('Refresh silencieux échoué'));
-        }
-        
         // Fonction pour actionner les actionneurs
         function toggleActuator(actuatorId, action) {
             const formData = new FormData();
             formData.append('actuator_id', actuatorId);
             formData.append('action', action);
             
-            fetch('<?= BASE_URL ?>?controller=actuator&action=toggle', {
+            fetch('http://localhost/APP-COMMUN-SERRE/?controller=actuator&action=toggle', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Mettre à jour l'interface
                     updateActuatorButton(actuatorId, data.newState);
                     showNotification(data.message, 'success');
                 } else {
@@ -244,14 +228,13 @@
             const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
             const alertHtml = `
                 <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-                     style="top: 20px; right: 20px; z-index: 1050;" role="alert">
+                     style="top: 80px; right: 20px; z-index: 1050;" role="alert">
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', alertHtml);
             
-            // Auto-suppression après 3 secondes
             setTimeout(() => {
                 const alert = document.querySelector('.alert');
                 if (alert) alert.remove();
@@ -261,18 +244,20 @@
         // Fonction pour mettre à jour l'état des boutons d'actionneurs
         function updateActuatorButton(actuatorId, newState) {
             const button = document.querySelector(`[data-actuator-id="${actuatorId}"]`);
-            const indicator = button.querySelector('.status-indicator');
+            if (!button) return;
+            
+            const statusIndicator = button.closest('.card').querySelector('.status-indicator');
             
             if (newState) {
                 button.textContent = 'Arrêter';
-                button.className = 'btn btn-danger btn-sm';
+                button.className = 'btn btn-danger';
                 button.onclick = () => toggleActuator(actuatorId, 'OFF');
-                indicator.className = 'status-indicator status-on';
+                if (statusIndicator) statusIndicator.className = 'status-indicator status-on';
             } else {
                 button.textContent = 'Démarrer';
-                button.className = 'btn btn-success btn-sm';
+                button.className = 'btn btn-success';
                 button.onclick = () => toggleActuator(actuatorId, 'ON');
-                indicator.className = 'status-indicator status-off';
+                if (statusIndicator) statusIndicator.className = 'status-indicator status-off';
             }
         }
     </script>

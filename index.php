@@ -4,7 +4,7 @@ session_start();
 
 // Configuration de base
 define('BASE_PATH', __DIR__);
-define('BASE_URL', 'http://localhost/greenhouse-project/');
+define('BASE_URL', 'http://localhost/APP-COMMUN-SERRE/');
 
 // Autoloader simple
 spl_autoload_register(function ($class) {
