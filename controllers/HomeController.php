@@ -83,22 +83,6 @@ class HomeController extends BaseController {
         ");
         $stmt->execute();
         return $stmt->fetchAll();
-    }RecentActivity() {
-        $stmt = $this->db->prepare("
-            SELECT 
-                al.action, al.timestamp,
-                a.name as actuator_name,
-                u.username,
-                t.name as team_name
-            FROM actuator_logs al
-            JOIN actuators a ON al.actuator_id = a.id
-            JOIN users u ON al.user_id = u.id
-            JOIN teams t ON a.team_id = t.id
-            ORDER BY al.timestamp DESC
-            LIMIT 10
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll();
     }
 }
 ?>

@@ -207,6 +207,7 @@ class SensorController extends BaseController {
     private function deleteSensor() {
         $id = (int)($_POST['sensor_id'] ?? 0);
         if ($id) {
+            $success = $this->sensorModel->deleteSensor($id);
             if ($success) {
                 $_SESSION['success_message'] = 'Capteur supprimé avec succès';
             } else {
