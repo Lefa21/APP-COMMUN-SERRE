@@ -126,9 +126,15 @@
                         <li class="nav-item">
                             <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor">Capteurs</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator">Actionneurs</a>
-                        </li>
+                        
+                        <!-- ACTIONNEURS : Seulement pour les admins -->
+                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator">Actionneurs</a>
+                            </li>
+                        <?php endif; ?>
+                        
+                        <!-- ADMINISTRATION : Seulement pour les admins -->
                         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
@@ -137,6 +143,8 @@
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator&action=manage">Gérer Actionneurs</a></li>
                                     <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor&action=manage">Gérer Capteurs</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=admin&action=users">Gestion Utilisateurs</a></li>
                                 </ul>
                             </li>
                         <?php endif; ?>
@@ -149,8 +157,13 @@
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                 👤 <?= htmlspecialchars($_SESSION['username']) ?>
                                 <span class="eco-badge">Éco</span>
+                                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                    <span class="badge bg-warning text-dark ms-1">Admin</span>
+                                <?php endif; ?>
                             </a>
                             <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=profile">Mon Profil</a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=logout">Déconnexion</a></li>
                             </ul>
                         </li>
@@ -198,6 +211,16 @@
                 }, 30000);
             }
         });
+        
+        // Fonction pour rafraîchir les données des capteurs via AJAX
+        function refreshSensorData() {
+            fetch('http://localhost/APP-COMMUN-SERRE/?controller=api&action=sensors')
+                .then(response => response.json())
+                .then(data => {
+                    updateSensorCards(data);
+                })
+                .catch(error => console.log('Refresh silencieux échoué'));
+        }
         
         // Fonction pour actionner les actionneurs
         function toggleActuator(actuatorId, action) {
@@ -259,6 +282,31 @@
                 button.onclick = () => toggleActuator(actuatorId, 'ON');
                 if (statusIndicator) statusIndicator.className = 'status-indicator status-off';
             }
+        }
+        
+        // Fonction pour mettre à jour les cartes de capteurs (appelée par refreshSensorData)
+        function updateSensorCards(sensorsData) {
+            if (!sensorsData.success || !sensorsData.data) return;
+            
+            sensorsData.data.forEach(sensor => {
+                const card = document.querySelector(`[data-sensor-id="${sensor.id}"]`);
+                if (card) {
+                    const valueElement = card.querySelector('.sensor-value');
+                    const timestampElement = card.querySelector('.sensor-timestamp');
+                    
+                    if (valueElement && sensor.value !== null) {
+                        valueElement.textContent = `${sensor.value} ${sensor.unit}`;
+                    }
+                    
+                    if (timestampElement && sensor.timestamp) {
+                        const time = new Date(sensor.timestamp).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        timestampElement.textContent = time;
+                    }
+                }
+            });
         }
     </script>
 </body>
