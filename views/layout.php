@@ -7,6 +7,8 @@
     
     <!-- CSS Bootstrap pour un design responsable -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- CSS personnalisé éco-responsable -->
     <style>
@@ -109,7 +111,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="http://localhost/APP-COMMUN-SERRE/">
+            <a class="navbar-brand" href="<?= BASE_URL ?>">
                 🌱 Serres Connectées
             </a>
             
@@ -121,20 +123,29 @@
                 <ul class="navbar-nav me-auto">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=home">Tableau de Bord</a>
+                            <a class="nav-link" href="<?= BASE_URL ?>?controller=home">
+                                <i class="bi bi-house"></i> Tableau de Bord
+                            </a>
+                        </li>
                         </li>
                         
                         <!-- ADMINISTRATION : Seulement pour les admins -->
                         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
-                                    Administration
+                                    <i class="bi bi-gear"></i> Administration
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=actuator&action=manage">Gérer Actionneurs</a></li>
-                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=sensor&action=manage">Gérer Capteurs</a></li>
+                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=actuator&action=manage">
+                                        <i class="bi bi-lightning"></i> Gérer Actionneurs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=sensor&action=manage">
+                                        <i class="bi bi-thermometer-half"></i> Gérer Capteurs
+                                    </a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=admin&action=users">Gestion Utilisateurs</a></li>
+                                    <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=admin&action=users">
+                                        <i class="bi bi-people"></i> Gestion Utilisateurs
+                                    </a></li>
                                 </ul>
                             </li>
                         <?php endif; ?>
@@ -145,24 +156,32 @@
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                👤 <?= htmlspecialchars($_SESSION['username']) ?>
+                                <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['username']) ?>
                                 <span class="eco-badge">Éco</span>
                                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <span class="badge bg-warning text-dark ms-1">Admin</span>
                                 <?php endif; ?>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=profile">Mon Profil</a></li>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=profile">
+                                    <i class="bi bi-person"></i> Mon Profil
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=logout">Déconnexion</a></li>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=auth&action=logout">
+                                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                                </a></li>
                             </ul>
                         </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=login">Connexion</a>
+                            <a class="nav-link" href="<?= BASE_URL ?>?controller=auth&action=login">
+                                <i class="bi bi-box-arrow-in-right"></i> Connexion
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="http://localhost/APP-COMMUN-SERRE/?controller=auth&action=register">Inscription</a>
+                            <a class="nav-link" href="<?= BASE_URL ?>?controller=auth&action=register">
+                                <i class="bi bi-person-plus"></i> Inscription
+                            </a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -180,7 +199,8 @@
         <div class="container">
             <p class="mb-2">🌍 Site éco-conçu - Consommation optimisée</p>
             <small class="text-muted">
-                Projet Serres Connectées - <?= date('Y') ?>
+                Projet Serres Connectées - <?= date('Y') ?> - 
+                <a href="<?= BASE_URL ?>?controller=api&action=health" class="text-decoration-none">Statut système</a>
             </small>
         </div>
     </footer>
@@ -192,7 +212,7 @@
     <script>
         // Optimisation: Chargement différé des scripts non critiques
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-refresh des données toutes les 30 secondes
+            // Auto-refresh des données toutes les 30 secondes (seulement sur la page d'accueil)
             if (window.location.search.includes('controller=home') || window.location.search === '') {
                 setInterval(function() {
                     if (!document.hidden) {
@@ -204,7 +224,7 @@
         
         // Fonction pour rafraîchir les données des capteurs via AJAX
         function refreshSensorData() {
-            fetch('http://localhost/APP-COMMUN-SERRE/?controller=api&action=sensors')
+            fetch('<?= BASE_URL ?>?controller=api&action=sensors')
                 .then(response => response.json())
                 .then(data => {
                     updateSensorCards(data);
@@ -218,7 +238,7 @@
             formData.append('actuator_id', actuatorId);
             formData.append('action', action);
             
-            fetch('http://localhost/APP-COMMUN-SERRE/?controller=actuator&action=toggle', {
+            fetch('<?= BASE_URL ?>?controller=actuator&action=toggle', {
                 method: 'POST',
                 body: formData
             })
@@ -242,6 +262,7 @@
             const alertHtml = `
                 <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
                      style="top: 80px; right: 20px; z-index: 1050;" role="alert">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -263,14 +284,14 @@
             
             if (newState) {
                 button.textContent = 'Arrêter';
-                button.className = 'btn btn-danger';
+                button.className = button.className.replace('btn-success', 'btn-danger');
                 button.onclick = () => toggleActuator(actuatorId, 'OFF');
-                if (statusIndicator) statusIndicator.className = 'status-indicator status-on';
+                if (statusIndicator) statusIndicator.className = 'status-indicator status-on me-2';
             } else {
                 button.textContent = 'Démarrer';
-                button.className = 'btn btn-success';
+                button.className = button.className.replace('btn-danger', 'btn-success');
                 button.onclick = () => toggleActuator(actuatorId, 'ON');
-                if (statusIndicator) statusIndicator.className = 'status-indicator status-off';
+                if (statusIndicator) statusIndicator.className = 'status-indicator status-off me-2';
             }
         }
         

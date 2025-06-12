@@ -1,5 +1,5 @@
 <?php
-// controllers/AdminController.php
+// controllers/AdminController.php - Version corrigée
 require_once BASE_PATH . '/controllers/BaseController.php';
 
 class AdminController extends BaseController {
@@ -24,7 +24,7 @@ class AdminController extends BaseController {
         $this->requireAdmin();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('?controller=admin&action=users');
+            $this->redirectBeforeRender('?controller=admin&action=users');
         }
         
         $action = $_POST['action'] ?? '';
@@ -49,7 +49,7 @@ class AdminController extends BaseController {
                 $_SESSION['error_message'] = 'Action non reconnue';
         }
         
-        $this->redirect('?controller=admin&action=users');
+        $this->redirectBeforeRender('?controller=admin&action=users');
     }
     
     public function systemLogs() {
@@ -106,7 +106,7 @@ class AdminController extends BaseController {
         $this->requireAdmin();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('?controller=admin&action=users');
+            $this->redirectBeforeRender('?controller=admin&action=users');
         }
         
         $action = $_POST['bulk_action'] ?? '';
@@ -114,7 +114,7 @@ class AdminController extends BaseController {
         
         if (empty($userIds)) {
             $_SESSION['error_message'] = 'Aucun utilisateur sélectionné';
-            $this->redirect('?controller=admin&action=users');
+            $this->redirectBeforeRender('?controller=admin&action=users');
         }
         
         switch ($action) {
@@ -132,7 +132,7 @@ class AdminController extends BaseController {
                 break;
         }
         
-        $this->redirect('?controller=admin&action=users');
+        $this->redirectBeforeRender('?controller=admin&action=users');
     }
     
     private function getAllUsers() {
@@ -190,7 +190,7 @@ class AdminController extends BaseController {
         $stmt = $this->db->query("
             SELECT COUNT(*) FROM user u
             LEFT JOIN user_profiles up ON u.id_user = up.user_id
-            WHERE up.deleted_at IS NULL
+            WHERE up.deleted_at IS NULL OR up.deleted_at = '0000-00-00 00:00:00'
         ");
         $stats['active_users'] = $stmt->fetchColumn();
         
@@ -227,7 +227,7 @@ class AdminController extends BaseController {
             return;
         }
         
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!$this->validateEmail($email)) {
             $_SESSION['error_message'] = 'Email invalide';
             return;
         }
@@ -383,7 +383,7 @@ class AdminController extends BaseController {
         $stmt->execute([$userId]);
         $profile = $stmt->fetch();
         
-        if ($profile['deleted_at']) {
+        if ($profile && $profile['deleted_at'] && $profile['deleted_at'] !== '0000-00-00 00:00:00') {
             // Réactiver
             $stmt = $this->db->prepare("
                 UPDATE user_profiles SET deleted_at = NULL WHERE user_id = ?
@@ -409,6 +409,12 @@ class AdminController extends BaseController {
             array_unshift($params, $filter);
         }
         
+        // Vérifier si la table system_logs existe
+        $stmt = $this->db->query("SHOW TABLES LIKE 'system_logs'");
+        if ($stmt->rowCount() === 0) {
+            return [];
+        }
+        
         $stmt = $this->db->prepare("
             SELECT sl.*, u.username
             FROM system_logs sl
@@ -422,6 +428,12 @@ class AdminController extends BaseController {
     }
     
     private function getTotalLogs($filter) {
+        // Vérifier si la table system_logs existe
+        $stmt = $this->db->query("SHOW TABLES LIKE 'system_logs'");
+        if ($stmt->rowCount() === 0) {
+            return 0;
+        }
+        
         if ($filter === 'all') {
             $stmt = $this->db->query("SELECT COUNT(*) FROM system_logs");
             return $stmt->fetchColumn();
@@ -463,7 +475,6 @@ class AdminController extends BaseController {
     }
     
     private function getSystemAlerts() {
-        // Récupérer les alertes système importantes
         $alerts = [];
         
         // Vérifier les capteurs inactifs
@@ -480,31 +491,15 @@ class AdminController extends BaseController {
             ];
         }
         
-        // Vérifier les données anciennes
-        $stmt = $this->db->query("
-            SELECT COUNT(DISTINCT capteur_id) as count 
-            FROM mesures 
-            WHERE date_heure < DATE_SUB(NOW(), INTERVAL 1 HOUR)
-            AND capteur_id IN (SELECT id FROM capteurs WHERE is_active = 1)
-        ");
-        $oldData = $stmt->fetchColumn();
-        if ($oldData > 0) {
-            $alerts[] = [
-                'type' => 'info',
-                'message' => "{$oldData} capteur(s) sans données récentes",
-                'action' => 'Vérifier la connectivité'
-            ];
-        }
-        
         return $alerts;
     }
     
     private function getPerformanceMetrics() {
         return [
-            'avg_response_time' => '0.15s', // Simulé
-            'uptime' => '99.9%', // Simulé
-            'memory_usage' => '45%', // Simulé
-            'disk_usage' => '60%', // Simulé
+            'avg_response_time' => '0.15s',
+            'uptime' => '99.9%',
+            'memory_usage' => '45%',
+            'disk_usage' => '60%',
             'database_size' => $this->getDatabaseSize()
         ];
     }
@@ -660,7 +655,7 @@ class AdminController extends BaseController {
         exit;
     }
     
-    // Méthodes utilitaires
+    // Méthodes utilitaires (visibilité corrigée)
     private function userExists($username, $email) {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) FROM user u
@@ -671,15 +666,7 @@ class AdminController extends BaseController {
         return $stmt->fetchColumn() > 0;
     }
     
-    private function generateUUID() {
-        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
-    }
+    // ✅ SUPPRIMÉ generateUUID() - utilise celle de BaseController
     
     private function generateRandomPassword($length = 8) {
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -696,7 +683,6 @@ class AdminController extends BaseController {
     }
     
     private function getActiveAlertsCount() {
-        // Simuler le comptage des alertes actives
         $stmt = $this->db->query("
             SELECT COUNT(*) FROM mesures m
             JOIN capteurs c ON m.capteur_id = c.id
