@@ -1,18 +1,32 @@
 <?php
 // controllers/HomeController.php
 require_once BASE_PATH . '/controllers/BaseController.php';
+// On charge les modèles nécessaires
+require_once BASE_PATH . '/models/Sensor.php';
+require_once BASE_PATH . '/models/Actuator.php';
 
 class HomeController extends BaseController {
     
+    private $sensorModel;
+    private $actuatorModel;
+
+    public function __construct() {
+        parent::__construct();
+        $this->sensorModel = new Sensor();
+        $this->actuatorModel = new Actuator();
+    }
+
     public function index() {
         if (!$this->isLoggedIn()) {
             $this->redirect('?controller=auth&action=login');
         }
         
-        // Récupérer les données des capteurs de toutes les équipes
-        $sensors = $this->getAllSensorsData();
-        $actuators = $this->getAllActuators();
-        $recentActivity = $this->getRecentActivity();
+        // --- MODIFICATION APPLIQUÉE ICI ---
+        // On utilise maintenant les fonctions exactes du modèle Sensor.php
+        $sensors = $this->getSensorsWithData(); 
+        
+        $actuators = $this->actuatorModel->findAllActive(); // En supposant que ActuatorModel a cette méthode
+        $recentActivity = $this->actuatorModel->getRecentActivity(10); // De même
         
         $data = [
             'sensors' => $sensors,
@@ -23,66 +37,28 @@ class HomeController extends BaseController {
         
         $this->render('home/index', $data);
     }
-    
-    private function getAllSensorsData() {
-        $stmt = $this->db->prepare("
-            SELECT 
-                c.id, c.nom as name, c.type, c.unite as unit, 
-                COALESCE(c.team_id, 1) as team_id,
-                t.name as team_name,
-                m.valeur as value, m.date_heure as timestamp,
-                ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY m.date_heure DESC) as rn
-            FROM capteurs c
-            LEFT JOIN teams t ON c.team_id = t.id
-            LEFT JOIN mesures m ON c.id = m.capteur_id
-            WHERE COALESCE(c.is_active, 1) = 1
-        ");
-        $stmt->execute();
-        $results = $stmt->fetchAll();
+
+    /**
+     * Nouvelle fonction privée pour construire les données des capteurs
+     * en utilisant les méthodes fournies dans le modèle.
+     */
+    private function getSensorsWithData() {
+        // 1. Récupérer tous les capteurs de base
+        $sensors = $this->sensorModel->getAllSensors();
         
-        // Garder seulement la dernière valeur pour chaque capteur
-        $sensors = [];
-        foreach ($results as $row) {
-            if ($row['rn'] == 1 || !isset($sensors[$row['id']])) {
-                $sensors[$row['id']] = $row;
+        // 2. Boucler pour ajouter la dernière donnée à chaque capteur
+        foreach ($sensors as &$sensor) { // Le '&' permet de modifier le tableau directement
+            $latestData = $this->sensorModel->getSensorData($sensor['id'], 1);
+            if (!empty($latestData)) {
+                $sensor['value'] = $latestData[0]['value'];
+                $sensor['timestamp'] = $latestData[0]['timestamp'];
+            } else {
+                $sensor['value'] = null;
+                $sensor['timestamp'] = null;
             }
         }
-        
-        return array_values($sensors);
-    }
-    
-    private function getAllActuators() {
-        $stmt = $this->db->prepare("
-            SELECT a.id, a.nom as name, a.type, 
-                   COALESCE(a.team_id, 1) as team_id,
-                   COALESCE(a.is_active, 1) as is_active,
-                   COALESCE(a.current_state, 0) as current_state,
-                   t.name as team_name 
-            FROM actionneurs a
-            LEFT JOIN teams t ON a.team_id = t.id
-            WHERE COALESCE(a.is_active, 1) = 1
-            ORDER BY t.name, a.nom
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
-    
-    private function getRecentActivity() {
-        $stmt = $this->db->prepare("
-            SELECT 
-                al.action, al.timestamp,
-                a.nom as actuator_name,
-                u.username,
-                t.name as team_name
-            FROM actuator_logs al
-            JOIN actionneurs a ON al.actionneur_id = a.id
-            JOIN user u ON al.user_id = u.id_user
-            LEFT JOIN teams t ON a.team_id = t.id
-            ORDER BY al.timestamp DESC
-            LIMIT 10
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll();
+        unset($sensor); // Bonne pratique pour supprimer la référence après la boucle
+
+        return $sensors;
     }
 }
-?>

@@ -1,0 +1,125 @@
+/* public/css/style.css */
+
+/* --- Styles Globaux (depuis layout.php) --- */
+:root {
+    --primary-color: #2d5a27;
+    --secondary-color: #5d8a54;
+    --accent-color: #8bc34a;
+    --text-color: #333;
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.navbar {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+    color: white !important;
+}
+
+.card {
+    border: 1px solid var(--card-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+.btn-primary:hover { background-color: var(--secondary-color); border-color: var(--secondary-color); }
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-on { background-color: #28a745; animation: pulse 2s infinite; }
+.status-off { background-color: #6c757d; }
+
+.eco-badge {
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+}
+
+/* --- Styles pour la timeline (depuis activity.php) --- */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+}
+.timeline-item { position: relative; margin-bottom: 2rem; }
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    border: 3px solid var(--card-bg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.timeline-content { margin-left: 1rem; }
+
+/* --- Styles pour les notifications (depuis notifications.php) --- */
+.notification-item {
+    border-left: 4px solid transparent;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+.notification-item.unread { border-left-color: var(--primary-color); background-color: rgba(45, 90, 39, 0.05); }
+.notification-item.read { border-left-color: #dee2e6; opacity: 0.8; }
+.icon-circle { width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.notification-actions { opacity: 0; transition: opacity 0.3s ease; }
+.notification-item:hover .notification-actions { opacity: 1; }
+
+/* --- Optimisations & Dark Mode --- */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --card-bg: #2d2d2d;
+        --card-border: #404040;
+    }
+}

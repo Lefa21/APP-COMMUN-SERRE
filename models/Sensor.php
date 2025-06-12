@@ -96,6 +96,11 @@ class Sensor {
         ");
         return $stmt->execute([$name, $type, $unit, $teamId]);
     }
+
+     public function create($name, $type, $unit, $teamId) {
+        $stmt = $this->db->prepare("INSERT INTO capteurs (nom, type, unite, team_id) VALUES (?, ?, ?, ?)");
+        return $stmt->execute([$name, $type, $unit, $teamId]);
+    }
     
     public function updateSensor($id, $name, $type, $unit, $isActive) {
         $stmt = $this->db->prepare("
@@ -233,6 +238,41 @@ class Sensor {
         $value = round($value, 2);
         
         return $this->addSensorData($sensorId, $value);
+    }
+
+     public function getAllSensorsWithLastReading() {
+        // Cette requête utilise une sous-requête pour trouver la dernière mesure de chaque capteur de manière efficace.
+        $stmt = $this->db->query("
+            SELECT 
+                c.id, c.nom as name, c.type, c.unite as unit, 
+                c.team_id, t.name as team_name,
+                m.valeur as value, m.date_heure as timestamp
+            FROM capteurs c
+            LEFT JOIN teams t ON c.team_id = t.id
+            LEFT JOIN mesures m ON m.id = (
+                SELECT id FROM mesures
+                WHERE capteur_id = c.id
+                ORDER BY date_heure DESC
+                LIMIT 1
+            )
+            WHERE c.is_active = 1
+            ORDER BY t.name, c.nom
+        ");
+        return $stmt->fetchAll();
+    }
+    
+     public function countActive() {
+        return (int) $this->db->query("SELECT COUNT(*) FROM capteurs WHERE is_active = 1")->fetchColumn();
+    }
+
+     private function periodToInterval($period) {
+        switch ($period) {
+            case '1h': return '1 HOUR';
+            case '7d': return '7 DAY';
+            case '30d': return '30 DAY';
+            case '24h':
+            default: return '24 HOUR';
+        }
     }
     
     public function getAlerts($teamId = null) {

@@ -7,19 +7,30 @@
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
+-- Supprimer la base si elle existe
+DROP DATABASE IF EXISTS `8pduqiq06b_bdd_serre`;
+CREATE DATABASE `8pduqiq06b_bdd_serre`;
+USE `8pduqiq06b_bdd_serre`;
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
+-- Réglages d'encodage
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Base de données : `8pduqiq06b_bdd_serre`
---
+-- Supprimer les tables si elles existent
+DROP TABLE IF EXISTS `actionneurs`;
+DROP TABLE IF EXISTS `active_sessions`;
+DROP TABLE IF EXISTS `actuator_logs`;
+DROP TABLE IF EXISTS `bienvenue`;
+DROP TABLE IF EXISTS `capteurs`;
+DROP TABLE IF EXISTS `etats_actionneurs`;
+DROP TABLE IF EXISTS `mesures`;
+DROP TABLE IF EXISTS `notifications`;
 
 -- --------------------------------------------------------
 
