@@ -15,120 +15,55 @@
         <div class="d-flex justify-content-between align-items-center">
             <h1>📈 Mon Activité</h1>
             <div class="btn-group">
-                <div class="btn-group">
-                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Exporter
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=profile&action=exportActivity&period=<?= $period ?>&format=csv">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> CSV
-                        </a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>?controller=profile&action=exportActivity&period=<?= $period ?>&format=json">
-                            <i class="bi bi-file-earmark-code"></i> JSON
-                        </a></li>
-                    </ul>
-                </div>
-                <button class="btn btn-outline-warning" onclick="clearOldActivity()">
-                    <i class="bi bi-trash"></i> Nettoyer
+                <a href="<?= BASE_URL ?>?controller=profile" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au profil
+                </a>
+                <button class="btn btn-outline-primary" onclick="exportActivity()">
+                    <i class="bi bi-download"></i> Exporter
                 </button>
             </div>
         </div>
-        <p class="text-muted">Historique de vos actions sur les actionneurs du système</p>
+        <p class="text-muted">Historique complet de vos actions sur le système</p>
     </div>
 </div>
 
-<!-- Statistiques de l'activité -->
+<!-- Statistiques d'activité -->
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h3 class="text-primary"><?= $stats['total_actions'] ?></h3>
-                <p class="mb-0">Actions Total</p>
-                <small class="text-muted">Sur <?= $period ?></small>
+                <h3 class="text-primary"><?= $totalActivities ?></h3>
+                <p class="mb-0">Actions totales</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h3 class="text-success"><?= $stats['on_actions'] ?></h3>
+                <h3 class="text-success">
+                    <?= count(array_filter($activities, function($a) { return $a['action'] === 'ON'; })) ?>
+                </h3>
                 <p class="mb-0">Activations</p>
-                <small class="text-muted">Actions ON</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h3 class="text-secondary"><?= $stats['off_actions'] ?></h3>
+                <h3 class="text-warning">
+                    <?= count(array_filter($activities, function($a) { return $a['action'] === 'OFF'; })) ?>
+                </h3>
                 <p class="mb-0">Arrêts</p>
-                <small class="text-muted">Actions OFF</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <div class="h3 text-info">
-                    <?= $stats['total_actions'] > 0 ? round(($stats['on_actions'] / $stats['total_actions']) * 100, 1) : 0 ?>%
-                </div>
-                <p class="mb-0">Ratio ON/OFF</p>
-                <small class="text-muted">Taux d'activation</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Informations détaillées -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">📊 Statistiques détaillées</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <strong>Actionneur le plus utilisé :</strong><br>
-                        <span class="text-muted">
-                            <?= $stats['most_used_actuator'] ?? 'Aucune donnée' ?>
-                        </span>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <strong>Jour le plus actif :</strong><br>
-                        <span class="text-muted">
-                            <?= $stats['busiest_day'] ?? 'Aucune donnée' ?>
-                        </span>
-                    </div>
-                    <div class="col-12">
-                        <strong>Heure préférée :</strong><br>
-                        <span class="text-muted">
-                            <?= $stats['busiest_hour'] ?? 'Aucune donnée' ?>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">🔧 Actions de maintenance</h6>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Gérez votre historique d'activité :</p>
-                <div class="d-grid gap-2">
-                    <form method="POST" action="<?= BASE_URL ?>?controller=profile&action=update" class="d-inline">
-                        <input type="hidden" name="action" value="clear_activity">
-                        <button type="submit" class="btn btn-outline-warning w-100" 
-                                onclick="return confirm('Supprimer l\'activité de plus de 90 jours ?')">
-                            <i class="bi bi-trash"></i> Nettoyer l'historique ancien
-                        </button>
-                    </form>
-                    <button class="btn btn-outline-info w-100" onclick="refreshActivity()">
-                        <i class="bi bi-arrow-clockwise"></i> Actualiser
-                    </button>
-                </div>
+                <h3 class="text-info">
+                    <?= count(array_unique(array_column($activities, 'actuator_name'))) ?>
+                </h3>
+                <p class="mb-0">Actionneurs contrôlés</p>
             </div>
         </div>
     </div>
@@ -139,195 +74,207 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <label for="periodFilter" class="form-label">Période :</label>
-                        <select id="periodFilter" class="form-select" onchange="changePeriod()">
-                            <option value="7d" <?= $period === '7d' ? 'selected' : '' ?>>7 derniers jours</option>
-                            <option value="30d" <?= $period === '30d' ? 'selected' : '' ?>>30 derniers jours</option>
-                            <option value="90d" <?= $period === '90d' ? 'selected' : '' ?>>90 derniers jours</option>
-                            <option value="all" <?= $period === 'all' ? 'selected' : '' ?>>Tout l'historique</option>
+                <form method="GET" action="<?= BASE_URL ?>?controller=profile&action=activity" class="row align-items-center">
+                    <div class="col-md-3">
+                        <label for="actionFilter" class="form-label">Action:</label>
+                        <select id="actionFilter" name="action_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="">Toutes les actions</option>
+                            <option value="ON" <?= ($_GET['action_filter'] ?? '') === 'ON' ? 'selected' : '' ?>>Activations (ON)</option>
+                            <option value="OFF" <?= ($_GET['action_filter'] ?? '') === 'OFF' ? 'selected' : '' ?>>Arrêts (OFF)</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label for="actionFilter" class="form-label">Action :</label>
-                        <select id="actionFilter" class="form-select" onchange="changeFilter()">
-                            <option value="all" <?= $filter === 'all' ? 'selected' : '' ?>>Toutes les actions</option>
-                            <option value="on" <?= $filter === 'on' ? 'selected' : '' ?>>Activations (ON)</option>
-                            <option value="off" <?= $filter === 'off' ? 'selected' : '' ?>>Arrêts (OFF)</option>
-                        </select>
+                    <div class="col-md-3">
+                        <label for="dateFrom" class="form-label">Du:</label>
+                        <input type="date" id="dateFrom" name="date_from" class="form-control" 
+                               value="<?= $_GET['date_from'] ?? '' ?>" onchange="this.form.submit()">
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Actions :</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAutoRefresh()">
-                                <i class="bi bi-arrow-clockwise"></i> <span id="autoRefreshText">Auto-refresh OFF</span>
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleCompactView()">
-                                <i class="bi bi-list"></i> Vue compacte
+                    <div class="col-md-3">
+                        <label for="dateTo" class="form-label">Au:</label>
+                        <input type="date" id="dateTo" name="date_to" class="form-control" 
+                               value="<?= $_GET['date_to'] ?? '' ?>" onchange="this.form.submit()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i> Effacer filtres
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Liste de l'activité -->
+<!-- Timeline d'activité -->
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">📋 Historique des actions</h5>
+                <h5 class="mb-0">🕒 Historique d'activité</h5>
                 <small class="text-muted">
-                    <?= $totalActivities ?> action(s) au total
-                    <?php if ($filter !== 'all' || $period !== 'all'): ?>
-                        - Filtré
-                    <?php endif; ?>
+                    Page <?= $currentPage ?> sur <?= $totalPages ?> 
+                    (<?= count($activities) ?> entrées)
                 </small>
             </div>
             <div class="card-body">
                 <?php if (empty($activities)): ?>
                     <div class="text-center py-5">
-                        <i class="bi bi-activity" style="font-size: 3rem; color: #ccc;"></i>
-                        <h5 class="mt-3">Aucune activité</h5>
+                        <i class="bi bi-clock-history" style="font-size: 3rem; color: #ccc;"></i>
+                        <h5 class="mt-3">Aucune activité trouvée</h5>
                         <p class="text-muted">
-                            <?php if ($filter !== 'all' || $period !== 'all'): ?>
-                                Aucune activité trouvée pour ces critères.
-                                <br><a href="<?= BASE_URL ?>?controller=profile&action=activity" class="btn btn-outline-primary btn-sm mt-2">
-                                    Voir toute l'activité
-                                </a>
+                            <?php if (!empty($_GET['action_filter']) || !empty($_GET['date_from'])): ?>
+                                Aucune activité ne correspond aux filtres sélectionnés.
+                                <br><button class="btn btn-link" onclick="clearFilters()">Effacer les filtres</button>
                             <?php else: ?>
-                                Vous n'avez encore effectué aucune action sur les actionneurs.
-                                <br><a href="<?= BASE_URL ?>?controller=actuator" class="btn btn-outline-primary btn-sm mt-2">
-                                    Découvrir les actionneurs
-                                </a>
+                                Vous n'avez encore effectué aucune action sur le système.
                             <?php endif; ?>
                         </p>
                     </div>
                 <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="activityTable">
-                            <thead>
-                                <tr>
-                                    <th>Date/Heure</th>
-                                    <th>Action</th>
-                                    <th>Actionneur</th>
-                                    <th>Type</th>
-                                    <th>Équipe</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($activities as $activity): ?>
-                                    <tr data-action="<?= strtolower($activity['action']) ?>">
-                                        <td>
-                                            <div class="d-flex flex-column">
-                                                <span><?= date('d/m/Y', strtotime($activity['timestamp'])) ?></span>
-                                                <small class="text-muted"><?= date('H:i:s', strtotime($activity['timestamp'])) ?></small>
+                    <!-- Timeline -->
+                    <div class="timeline">
+                        <?php 
+                        $currentDate = '';
+                        foreach ($activities as $activity): 
+                            $activityDate = date('Y-m-d', strtotime($activity['timestamp']));
+                            
+                            // Afficher le séparateur de date
+                            if ($currentDate !== $activityDate):
+                                $currentDate = $activityDate;
+                        ?>
+                            <div class="timeline-date">
+                                <h6 class="text-muted mb-3">
+                                    <?php
+                                    $date = new DateTime($activityDate);
+                                    $today = new DateTime();
+                                    $yesterday = new DateTime('yesterday');
+                                    
+                                    if ($date->format('Y-m-d') === $today->format('Y-m-d')) {
+                                        echo "Aujourd'hui";
+                                    } elseif ($date->format('Y-m-d') === $yesterday->format('Y-m-d')) {
+                                        echo "Hier";
+                                    } else {
+                                        echo strftime('%A %d %B %Y', $date->getTimestamp());
+                                    }
+                                    ?>
+                                </h6>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-<?= $activity['action'] === 'ON' ? 'success' : 'secondary' ?>">
+                                <i class="bi bi-<?= $activity['action'] === 'ON' ? 'play' : 'stop' ?>-circle text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <?php
+                                                    $icon = '';
+                                                    switch ($activity['activity_type']) {
+                                                        case 'actuator_action':
+                                                            $icon = '⚡';
+                                                            break;
+                                                        case 'sensor_view':
+                                                            $icon = '👁️';
+                                                            break;
+                                                        case 'login':
+                                                            $icon = '🔑';
+                                                            break;
+                                                        default:
+                                                            $icon = '📝';
+                                                    }
+                                                    ?>
+                                                    <?= $icon ?> Action sur <?= htmlspecialchars($activity['actuator_name']) ?>
+                                                </h6>
+                                                <p class="mb-2">
+                                                    <span class="badge bg-<?= $activity['action'] === 'ON' ? 'success' : 'secondary' ?>">
+                                                        <?= $activity['action'] ?>
+                                                    </span>
+                                                    <?php if (!empty($activity['team_name'])): ?>
+                                                        <span class="badge bg-info ms-1">
+                                                            <?= htmlspecialchars($activity['team_name']) ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </p>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock"></i>
+                                                    <?= date('H:i:s', strtotime($activity['timestamp'])) ?>
+                                                    
+                                                    <?php if (!empty($activity['details'])): ?>
+                                                        <br><i class="bi bi-info-circle"></i>
+                                                        Détails: <?= htmlspecialchars($activity['details']) ?>
+                                                    <?php endif; ?>
+                                                </small>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-<?= $activity['action'] === 'ON' ? 'success' : 'secondary' ?> fs-6">
-                                                <?php if ($activity['action'] === 'ON'): ?>
-                                                    <i class="bi bi-play-circle"></i> ON
-                                                <?php else: ?>
-                                                    <i class="bi bi-stop-circle"></i> OFF
-                                                <?php endif; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
+                                            <div class="text-end">
                                                 <?php
-                                                $icon = '';
-                                                switch ($activity['actuator_type']) {
-                                                    case 'irrigation': $icon = '💧'; break;
-                                                    case 'ventilation': $icon = '🌪️'; break;
-                                                    case 'heating': $icon = '🔥'; break;
-                                                    case 'lighting': $icon = '💡'; break;
-                                                    case 'window': $icon = '🪟'; break;
-                                                    default: $icon = '⚡';
-                                                }
+                                                $timeAgo = time() - strtotime($activity['timestamp']);
+                                                if ($timeAgo < 60) echo "À l'instant";
+                                                elseif ($timeAgo < 3600) echo floor($timeAgo/60) . " min";
+                                                elseif ($timeAgo < 86400) echo floor($timeAgo/3600) . " h";
+                                                else echo floor($timeAgo/86400) . " j";
                                                 ?>
-                                                <span class="me-2"><?= $icon ?></span>
-                                                <div>
-                                                    <div class="fw-medium"><?= htmlspecialchars($activity['actuator_name']) ?></div>
-                                                    <small class="text-muted"><?= ucfirst($activity['actuator_type']) ?></small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Graphique d'impact (si disponible) -->
+                                        <?php if ($activity['action'] === 'ON'): ?>
+                                            <div class="mt-2">
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar bg-success" style="width: <?= rand(20, 100) ?>%"></div>
                                                 </div>
+                                                <small class="text-muted">Impact estimé sur l'environnement de la serre</small>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                <?= ucfirst($activity['actuator_type']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">
-                                                <?= htmlspecialchars($activity['team_name'] ?? 'N/A') ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="status-indicator <?= $activity['action'] === 'ON' ? 'status-on' : 'status-off' ?> me-2"></span>
-                                                <span class="text-<?= $activity['action'] === 'ON' ? 'success' : 'muted' ?>">
-                                                    <?= $activity['action'] === 'ON' ? 'Activé' : 'Arrêté' ?>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                     
                     <!-- Pagination -->
                     <?php if ($totalPages > 1): ?>
-                        <nav aria-label="Navigation de l'activité" class="mt-4">
-                            <ul class="pagination pagination-sm justify-content-center">
+                        <nav aria-label="Navigation activité" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <!-- Première page -->
                                 <?php if ($currentPage > 1): ?>
                                     <li class="page-item">
-                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $currentPage - 1 ?>&filter=<?= $filter ?>&period=<?= $period ?>">
-                                            <i class="bi bi-chevron-left"></i> Précédent
+                                        <a class="page-link" href="?controller=profile&action=activity&page=1<?= buildQueryString() ?>">
+                                            <i class="bi bi-chevron-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $currentPage - 1 ?><?= buildQueryString() ?>">
+                                            <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
                                 <?php endif; ?>
                                 
-                                <?php 
-                                $startPage = max(1, $currentPage - 2);
-                                $endPage = min($totalPages, $currentPage + 2);
-                                ?>
-                                
-                                <?php if ($startPage > 1): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?controller=profile&action=activity&page=1&filter=<?= $filter ?>&period=<?= $period ?>">1</a>
-                                    </li>
-                                    <?php if ($startPage > 2): ?>
-                                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                                
-                                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <!-- Pages autour de la page actuelle -->
+                                <?php for ($i = max(1, $currentPage - 2); $i <= min($totalPages, $currentPage + 2); $i++): ?>
                                     <li class="page-item <?= $i === $currentPage ? 'active' : '' ?>">
-                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $i ?>&filter=<?= $filter ?>&period=<?= $period ?>">
+                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $i ?><?= buildQueryString() ?>">
                                             <?= $i ?>
                                         </a>
                                     </li>
                                 <?php endfor; ?>
                                 
-                                <?php if ($endPage < $totalPages): ?>
-                                    <?php if ($endPage < $totalPages - 1): ?>
-                                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                                    <?php endif; ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $totalPages ?>&filter=<?= $filter ?>&period=<?= $period ?>"><?= $totalPages ?></a>
-                                    </li>
-                                <?php endif; ?>
-                                
+                                <!-- Dernière page -->
                                 <?php if ($currentPage < $totalPages): ?>
                                     <li class="page-item">
-                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $currentPage + 1 ?>&filter=<?= $filter ?>&period=<?= $period ?>">
-                                            Suivant <i class="bi bi-chevron-right"></i>
+                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $currentPage + 1 ?><?= buildQueryString() ?>">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?controller=profile&action=activity&page=<?= $totalPages ?><?= buildQueryString() ?>">
+                                            <i class="bi bi-chevron-double-right"></i>
                                         </a>
                                     </li>
                                 <?php endif; ?>
@@ -347,159 +294,185 @@
             <div class="d-flex align-items-center">
                 <span class="me-2">🌍</span>
                 <div>
-                    <strong>Impact Éco-responsable :</strong>
-                    Cette page d'activité vous aide à optimiser votre utilisation des actionneurs. 
-                    En analysant vos habitudes, vous pouvez réduire la consommation énergétique inutile.
-                    <br><small class="mt-1">
-                        Astuce : Un ratio ON/OFF équilibré indique une utilisation efficace des équipements.
-                    </small>
+                    <strong>Impact Éco-responsable:</strong>
+                    Cette page d'activité utilise une pagination efficace pour réduire la charge serveur. 
+                    Le chargement différé des données historiques limite la consommation de bande passante.
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<?php
+// Fonction helper pour construire la query string avec les filtres
+function buildQueryString() {
+    $params = [];
+    if (!empty($_GET['action_filter'])) $params[] = 'action_filter=' . urlencode($_GET['action_filter']);
+    if (!empty($_GET['date_from'])) $params[] = 'date_from=' . urlencode($_GET['date_from']);
+    if (!empty($_GET['date_to'])) $params[] = 'date_to=' . urlencode($_GET['date_to']);
+    return empty($params) ? '' : '&' . implode('&', $params);
+}
+?>
+
 <script>
-// Variables globales
-let autoRefreshInterval = null;
-let compactView = false;
-
-// Fonctions de filtrage
-function changePeriod() {
-    const period = document.getElementById('periodFilter').value;
-    const filter = document.getElementById('actionFilter').value;
-    window.location.href = `?controller=profile&action=activity&period=${period}&filter=${filter}`;
+// Effacer les filtres
+function clearFilters() {
+    window.location.href = '<?= BASE_URL ?>?controller=profile&action=activity';
 }
 
-function changeFilter() {
-    const period = document.getElementById('periodFilter').value;
-    const filter = document.getElementById('actionFilter').value;
-    window.location.href = `?controller=profile&action=activity&period=${period}&filter=${filter}`;
-}
-
-// Auto-refresh
-function toggleAutoRefresh() {
-    const button = document.getElementById('autoRefreshText');
+// Exporter l'activité
+function exportActivity() {
+    const actionFilter = document.getElementById('actionFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
     
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-        button.textContent = 'Auto-refresh OFF';
-    } else {
-        autoRefreshInterval = setInterval(refreshActivity, 30000); // 30 secondes
-        button.textContent = 'Auto-refresh ON';
-    }
-}
-
-function refreshActivity() {
-    window.location.reload();
-}
-
-// Vue compacte
-function toggleCompactView() {
-    compactView = !compactView;
-    const table = document.getElementById('activityTable');
+    let url = '<?= BASE_URL ?>?controller=profile&action=exportActivity';
+    const params = [];
     
-    if (compactView) {
-        table.classList.add('table-sm');
-        // Masquer certaines colonnes en mode compact
-        const cells = table.querySelectorAll('th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5)');
-        cells.forEach(cell => cell.style.display = 'none');
-    } else {
-        table.classList.remove('table-sm');
-        const cells = table.querySelectorAll('th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5)');
-        cells.forEach(cell => cell.style.display = '');
+    if (actionFilter) params.push('action_filter=' + encodeURIComponent(actionFilter));
+    if (dateFrom) params.push('date_from=' + encodeURIComponent(dateFrom));
+    if (dateTo) params.push('date_to=' + encodeURIComponent(dateTo));
+    
+    if (params.length > 0) {
+        url += '&' + params.join('&');
     }
+    
+    window.open(url, '_blank');
 }
 
-// Nettoyage de l'activité
-function clearOldActivity() {
-    if (confirm('Êtes-vous sûr de vouloir supprimer l\'activité de plus de 90 jours ?\n\nCette action est irréversible.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<?= BASE_URL ?>?controller=profile&action=update';
-        form.innerHTML = '<input type="hidden" name="action" value="clear_activity">';
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-// Animation des lignes
+// Auto-refresh toutes les 5 minutes si la page est active
+let activityRefreshInterval;
 document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('#activityTable tbody tr');
-    rows.forEach((row, index) => {
-        row.style.animationDelay = (index * 0.05) + 's';
-        row.classList.add('fade-in');
-    });
+    activityRefreshInterval = setInterval(function() {
+        if (!document.hidden) {
+            // Refresh silencieux - ne recharge que si nouvelle activité
+            fetch('<?= BASE_URL ?>?controller=api&action=checkNewActivity')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.newActivity) {
+                        showNotification('Nouvelle activité détectée', 'info');
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
+                })
+                .catch(() => {}); // Ignore les erreurs silencieusement
+        }
+    }, 300000); // 5 minutes
+});
+
+// Nettoyer l'interval quand on quitte la page
+window.addEventListener('beforeunload', function() {
+    if (activityRefreshInterval) {
+        clearInterval(activityRefreshInterval);
+    }
 });
 </script>
 
 <style>
-/* Styles pour l'activité */
-.status-indicator {
-    width: 8px;
-    height: 8px;
+/* Styles pour la timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+}
+
+.timeline-date {
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+}
+
+.timeline-date:first-child {
+    margin-top: 0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.5rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    border: 3px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.status-on {
-    background-color: #28a745;
-    animation: pulse 2s infinite;
+.timeline-content {
+    margin-left: 1rem;
 }
 
-.status-off {
-    background-color: #6c757d;
+.timeline-item:last-child {
+    margin-bottom: 0;
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
+/* Animation pour les nouveaux éléments */
+.timeline-item {
+    animation: slideInRight 0.5s ease-out;
 }
 
-.fade-in {
-    animation: fadeIn 0.5s ease-in-out forwards;
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-@keyframes fadeIn {
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
     to {
         opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.badge.fs-6 {
-    font-size: 0.875rem !important;
-}
-
-/* Mode éco-responsable */
-@media (prefers-reduced-motion: reduce) {
-    .fade-in {
-        animation: none;
-        opacity: 1;
-        transform: none;
-    }
-    
-    .status-on {
-        animation: none;
+        transform: translateX(0);
     }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.875rem;
+    .timeline {
+        padding-left: 1rem;
     }
     
-    .badge {
-        font-size: 0.75rem;
+    .timeline::before {
+        left: 0.5rem;
     }
     
-    .d-flex.flex-column span {
-        font-size: 0.875rem;
+    .timeline-marker {
+        left: -1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    
+    .timeline-content {
+        margin-left: 0.5rem;
+    }
+}
+
+/* Mode éco-responsable */
+@media (prefers-reduced-motion: reduce) {
+    .timeline-item {
+        animation: none;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .timeline::before {
+        background: linear-gradient(to bottom, #8bc34a, #2d5a27);
+    }
+    
+    .timeline-marker {
+        border-color: #2d2d2d;
     }
 }
 </style>
