@@ -20,6 +20,13 @@
             --text-color: #333;
             --bg-color: #f8f9fa;
         }
+
+           .footer {
+            margin-top: 50px;
+            background: var(--primary-color);
+            color: white;
+            padding: 40px 0 20px;
+        }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -195,13 +202,45 @@
     </main>
 
     <!-- Footer éco-responsable -->
-    <footer class="mt-5 py-4 bg-light text-center">
+     <footer class="footer">
         <div class="container">
-            <p class="mb-2">🌍 Site éco-conçu - Consommation optimisée</p>
-            <small class="text-muted">
-                Projet Serres Connectées - <?= date('Y') ?> - 
-                <a href="<?= BASE_URL ?>?controller=api&action=health" class="text-decoration-none">Statut système</a>
-            </small>
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <h5 class="fw-bold mb-3">🌱 Serres Connectées</h5>
+                    <p class="small">Solution innovante pour une agriculture durable et intelligente. Projet pédagogique de l'ISEP.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white"><i class="bi bi-github"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <h6 class="fw-bold mb-2">Produit</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#fonctionnalites" class="text-white-50 text-decoration-none">Fonctionnalités</a></li>
+                        <li><a href="#avantages" class="text-white-50 text-decoration-none">Avantages</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <h6 class="fw-bold mb-2">Entreprise</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#a-propos" class="text-white-50 text-decoration-none">À propos</a></li>
+                        <li><a href="#contact" class="text-white-50 text-decoration-none">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <h6 class="fw-bold mb-2">Éco-responsable</h6>
+                    <p class="small text-white-50">🌍 Site éco-conçu - Consommation optimisée<br>Conforme aux standards RGESN</p>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 small">© 2025 Serres Connectées - ISEP. Tous droits réservés.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-white-50">Version 1.0 - Projet étudiant</small>
+                </div>
+            </div>
         </div>
     </footer>
 
