@@ -102,23 +102,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="team_id" class="form-label">
-                            <i class="bi bi-people"></i> Équipe *
-                        </label>
-                        <select class="form-select" id="team_id" name="team_id" required>
-                            <option value="">Choisissez votre équipe</option>
-                            <?php foreach ($teams as $team): ?>
-                                <option value="<?= $team['id'] ?>" 
-                                    <?= (isset($_POST['team_id']) && $_POST['team_id'] == $team['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($team['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="form-text">Sélectionnez l'équipe à laquelle vous appartenez</div>
-                    </div>
-
+                    
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
                         <label class="form-check-label" for="terms">

@@ -2,17 +2,14 @@
 // controllers/ActuatorController.php
 require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/Actuator.php';
-require_once BASE_PATH . '/models/Team.php';
 
 class ActuatorController extends BaseController {
     
     private $actuatorModel;
-    private $teamModel;
 
     public function __construct() {
         parent::__construct();
         $this->actuatorModel = new Actuator();
-        $this->teamModel = new Team();
     }
 
     public function index() {
@@ -48,7 +45,7 @@ class ActuatorController extends BaseController {
         }
 
         // Vérifier les permissions (un admin ou un membre de l'équipe peut agir)
-        if (!$this->isAdmin() && $actuator['team_id'] != $this->getUserTeamId()) {
+        if (!$this->isAdmin()) {
             $this->jsonResponse(['error' => 'Permission refusée'], 403);
         }
         
@@ -75,11 +72,9 @@ class ActuatorController extends BaseController {
         }
         
         $actuators = $this->actuatorModel->findAll();
-        $teams = $this->teamModel->findAll();
         
         $this->render('actuators/manage', [
             'actuators' => $actuators,
-            'teams' => $teams
         ]);
     }
 
@@ -102,10 +97,9 @@ class ActuatorController extends BaseController {
     private function addActuator() {
         $name = trim($_POST['name'] ?? '');
         $type = $_POST['type'] ?? '';
-        $teamId = (int)($_POST['team_id'] ?? 0);
         
-        if ($name && $type && $teamId) {
-            if ($this->actuatorModel->create($name, $type, $teamId)) {
+        if ($name && $type) {
+            if ($this->actuatorModel->create($name, $type)) {
                 $this->setMessage('Actionneur ajouté avec succès', 'success');
             } else {
                 $this->setMessage('Erreur lors de l\'ajout', 'error');

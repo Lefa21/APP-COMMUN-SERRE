@@ -121,15 +121,6 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="teamFilter" class="form-label">Filtrer par équipe:</label>
-                        <select id="teamFilter" class="form-select" onchange="filterUsers()">
-                            <option value="">Toutes les équipes</option>
-                            <?php foreach ($teams as $team): ?>
-                                <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
                         <label for="statusFilter" class="form-label">Filtrer par statut:</label>
                         <select id="statusFilter" class="form-select" onchange="filterUsers()">
                             <option value="">Tous</option>
@@ -200,7 +191,6 @@
                         <tbody>
                             <?php foreach ($users as $user): ?>
                                 <tr data-role="<?= $user['role_name'] ?>" 
-                                    data-team="<?= $user['team_id'] ?>" 
                                     data-status="<?= $user['is_active'] ?>"
                                     data-search="<?= strtolower($user['username'] . ' ' . $user['email'] . ' ' . $user['first_name'] . ' ' . $user['last_name']) ?>"
                                     class="user-row">
@@ -239,13 +229,6 @@
                                         <span class="badge bg-<?= $user['role_name'] === 'admin' ? 'warning' : 'primary' ?>">
                                             <?= ucfirst($user['role_name'] ?? 'Aucun') ?>
                                         </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($user['team_name']): ?>
-                                            <span class="badge bg-info"><?= htmlspecialchars($user['team_name']) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">Aucune</span>
-                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge bg-<?= $user['is_active'] ? 'success' : 'secondary' ?>">
@@ -377,17 +360,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="createTeam" class="form-label">Équipe</label>
-                                <select class="form-select" id="createTeam" name="team_id">
-                                    <option value="">Aucune équipe</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -466,17 +438,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="editTeam" class="form-label">Équipe</label>
-                                <select class="form-select" id="editTeam" name="team_id">
-                                    <option value="">Aucune équipe</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -497,7 +458,6 @@ const usersData = <?= json_encode($users) ?>;
 // Filtrage des utilisateurs
 function filterUsers() {
     const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
-    const teamFilter = document.getElementById('teamFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
     
@@ -506,16 +466,14 @@ function filterUsers() {
     
     rows.forEach(row => {
         const role = row.dataset.role ? row.dataset.role.toLowerCase() : '';
-        const team = row.dataset.team;
         const status = row.dataset.status;
         const searchText = row.dataset.search;
         
         const roleMatch = !roleFilter || role.includes(roleFilter);
-        const teamMatch = !teamFilter || team === teamFilter;
         const statusMatch = !statusFilter || status === statusFilter;
         const searchMatch = !searchFilter || searchText.includes(searchFilter);
         
-        if (roleMatch && teamMatch && statusMatch && searchMatch) {
+        if (roleMatch && statusMatch && searchMatch) {
             row.style.display = '';
             visibleCount++;
         } else {
@@ -565,7 +523,6 @@ function editUser(userId) {
     document.getElementById('editFirstName').value = user.first_name || '';
     document.getElementById('editLastName').value = user.last_name || '';
     document.getElementById('editRole').value = user.role_id || '';
-    document.getElementById('editTeam').value = user.team_id || '';
     
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
 }

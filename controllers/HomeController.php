@@ -3,21 +3,24 @@
 require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/Sensor.php';
 require_once BASE_PATH . '/models/Actuator.php';
+require_once BASE_PATH . '/models/ContactMessage.php';
 
 class HomeController extends BaseController {
     
     private $sensorModel;
     private $actuatorModel;
+    private $contactMessageModel;
 
     public function __construct() {
         parent::__construct();
         $this->sensorModel = new Sensor();
         $this->actuatorModel = new Actuator();
+         $this->contactMessageModel = new ContactMessage();
     }
 
     public function index() {
         // Si l'utilisateur n'est pas connecté, afficher la landing page
-        if (!$this->isLoggedIn()) {
+        if (!$this->isLoggedIn() && !$this->isAdmin()) {
             $this->renderLandingPage();
             return;
         }
@@ -25,12 +28,10 @@ class HomeController extends BaseController {
         // Code existant pour les utilisateurs connectés
         $sensors = $this->getSensorsWithData(); 
         $actuators = $this->actuatorModel->findAllActive();
-        $recentActivity = $this->actuatorModel->getRecentActivity(10);
         
         $data = [
             'sensors' => $sensors,
             'actuators' => $actuators,
-            'recentActivity' => $recentActivity,
             'isAdmin' => $this->isAdmin()
         ];
         
@@ -90,34 +91,48 @@ class HomeController extends BaseController {
     }
 
     /**
-     * Page de contact (accessible publiquement)
+     * Gère l'affichage et la soumission du formulaire de contact.
      */
     public function contact() {
-        $message = '';
-        $error = '';
+        // Initialisation des variables pour la vue
+        $data = [
+            'success_message' => '',
+            'error_message' => '',
+            'submitted_data' => []
+        ];
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Récupérer et nettoyer les données du formulaire
             $name = trim($_POST['name'] ?? '');
             $email = trim($_POST['email'] ?? '');
-            $subject = trim($_POST['subject'] ?? '');
+            $subject = trim($_POST['subject'] ?? 'Sans objet');
             $messageText = trim($_POST['message'] ?? '');
             
+            // Conserver les données soumises pour ré-afficher en cas d'erreur
+            $data['submitted_data'] = $_POST;
+
+            // Validation des données
             if (empty($name) || empty($email) || empty($messageText)) {
-                $error = 'Tous les champs sont obligatoires.';
+                $data['error_message'] = 'Les champs Nom, Email et Message sont obligatoires.';
             } elseif (!$this->validateEmail($email)) {
-                $error = 'Email invalide.';
+                $data['error_message'] = 'Votre adresse email ne semble pas valide.';
             } else {
-                // Ici vous pourriez envoyer un email ou sauvegarder en base
-                // Pour la démo, on simule l'envoi
-                $this->logContactMessage($name, $email, $subject, $messageText);
-                $message = 'Votre message a été envoyé avec succès. Nous vous répondrons sous 24h.';
+                // Utilisation du modèle pour sauvegarder le message
+                // C'est ici que l'appel à l'ancienne fonction est remplacé
+                if ($this->contactMessageModel->save($name, $email, $subject, $messageText)) {
+                    // Succès : préparer un message de succès et vider les données soumises
+                    $this->setMessage('Votre message a été envoyé avec succès !', 'success');
+                    // Rediriger pour éviter une nouvelle soumission du formulaire si l'utilisateur rafraîchit la page (Post/Redirect/Get pattern)
+                    $this->redirect('?controller=home&action=contact');
+                } else {
+                    // Échec de la sauvegarde
+                    $data['error_message'] = 'Une erreur technique est survenue. Veuillez réessayer plus tard.';
+                }
             }
         }
         
-        $this->render('home/contact', [
-            'message' => $message,
-            'error' => $error
-        ]);
+        // Afficher la vue avec les données (messages d'erreur/succès)
+        $this->render('home/contact', $data);
     }
 
     /**
@@ -141,33 +156,24 @@ class HomeController extends BaseController {
         return $sensors;
     }
 
-    /**
-     * Log des messages de contact (simple)
-     */
-    private function logContactMessage($name, $email, $subject, $message) {
-        try {
-            // Créer une table contact_messages si elle n'existe pas
-            $this->db->exec("
-                CREATE TABLE IF NOT EXISTS contact_messages (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) NOT NULL,
-                    subject VARCHAR(255),
-                    message TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ");
-            
-            $stmt = $this->db->prepare("
-                INSERT INTO contact_messages (name, email, subject, message) 
-                VALUES (?, ?, ?, ?)
-            ");
-            $stmt->execute([$name, $email, $subject, $message]);
-            
-            return true;
-        } catch (Exception $e) {
-            error_log("Erreur sauvegarde contact: " . $e->getMessage());
-            return false;
+    public function contactSubmit() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = $_POST['name'] ?? 'Anonyme';
+            $email = $_POST['email'] ?? '';
+            $subject = $_POST['subject'] ?? 'Sans objet';
+            $message = $_POST['message'] ?? '';
+
+            if (!empty($email) && !empty($message)) {
+                // On utilise maintenant le modèle ! C'est plus propre.
+                if ($this->contactMessageModel->save($name, $email, $subject, $message)) {
+                    $this->setMessage('Votre message a bien été envoyé.', 'success');
+                } else {
+                    $this->setMessage('Une erreur est survenue lors de l\'envoi du message.', 'error');
+                }
+            } else {
+                 $this->setMessage('Veuillez remplir tous les champs obligatoires.', 'error');
+            }
+            $this->redirect('?controller=home&action=contactPage'); // Redirige vers la page de contact
         }
     }
 }

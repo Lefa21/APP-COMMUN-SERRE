@@ -2,17 +2,14 @@
 // controllers/AuthController.php
 require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/User.php';
-require_once BASE_PATH . '/models/Team.php';
 
 class AuthController extends BaseController {
 
     private $userModel;
-    private $teamModel;
 
     public function __construct() {
         parent::__construct();
         $this->userModel = new User();
-        $this->teamModel = new Team();
     }
     
     public function login() {
@@ -36,7 +33,6 @@ class AuthController extends BaseController {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['user_role'] = $user['role'];
-                    $_SESSION['team_id'] = $user['team_id'];
                     
                     $this->redirect('?controller=home');
                 } else {
@@ -61,7 +57,6 @@ class AuthController extends BaseController {
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
-            $teamId = (int)($_POST['team_id'] ?? 1);
             
             // Validation (inchangée)
             if (empty($username) || empty($email) || empty($password)) {
@@ -78,7 +73,7 @@ class AuthController extends BaseController {
                     $error = 'Un utilisateur avec ce nom ou cet email existe déjà';
                 } else {
                     // Utilisation du modèle pour créer l'utilisateur
-                    if ($this->userModel->create($username, $email, $password, $teamId)) {
+                    if ($this->userModel->create($username, $email, $password)) {
                         $success = 'Compte créé avec succès. Vous pouvez maintenant vous connecter.';
                     } else {
                         $error = 'Erreur lors de la création du compte';
@@ -88,12 +83,10 @@ class AuthController extends BaseController {
         }
         
         // Utilisation du modèle pour récupérer les équipes
-        $teams = $this->teamModel->findAll();
         
         $this->render('auth/register', [
             'error' => $error, 
             'success' => $success,
-            'teams' => $teams
         ]);
     }
     

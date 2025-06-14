@@ -4,7 +4,8 @@ class Role {
     private $db;
 
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        // Ce modèle gère les rôles, qui sont sur la BD locale.
+        $this->db = Database::getConnection('local');
     }
 
     public function findAll() {

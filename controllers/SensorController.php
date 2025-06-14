@@ -2,17 +2,14 @@
 // controllers/SensorController.php
 require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/Sensor.php';
-require_once BASE_PATH . '/models/Team.php';
 
 class SensorController extends BaseController {
     
     private $sensorModel;
-    private $teamModel;
 
     public function __construct() {
         parent::__construct();
         $this->sensorModel = new Sensor();
-        $this->teamModel = new Team();
     }
     
     public function index() {
@@ -22,7 +19,7 @@ class SensorController extends BaseController {
         $sensors = $this->getSensorsWithData();
         
         // La fonction getAlerts existe dans votre modèle, donc c'est correct.
-        $alerts = $this->sensorModel->getAlerts($this->isAdmin() ? null : $this->getUserTeamId());
+        $alerts = $this->sensorModel->getAlerts(null);
         
         $this->render('sensors/index', [
             'sensors' => $sensors,
@@ -82,9 +79,8 @@ class SensorController extends BaseController {
         }
         
         $sensors = $this->sensorModel->getAllSensors(); // Correct, la fonction existe
-        $teams = $this->teamModel->findAll();
         
-        $this->render('sensors/manage', ['sensors' => $sensors, 'teams' => $teams]);
+        $this->render('sensors/manage', ['sensors' => $sensors,]);
     }
 
     private function handleManagement() {
@@ -109,9 +105,9 @@ class SensorController extends BaseController {
         $name = trim($_POST['name'] ?? '');
         $type = $_POST['type'] ?? '';
         $unit = trim($_POST['unit'] ?? '');
-        $teamId = (int)($_POST['team_id'] ?? 0);
+
         // La fonction addSensor existe, c'est correct
-        if ($this->sensorModel->addSensor($name, $type, $unit, $teamId)) {
+        if ($this->sensorModel->addSensor($name, $type, $unit)) {
             $this->setMessage('Capteur ajouté avec succès', 'success');
         } else {
             $this->setMessage('Erreur', 'error');

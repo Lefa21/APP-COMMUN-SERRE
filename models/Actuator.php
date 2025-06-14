@@ -1,20 +1,23 @@
 <?php
 // models/Actuator.php
+
 class Actuator {
-    private $db;
+    private $db_remote; // Pour la table 'actionneurs'
+    private $db_local;  // Pour la table 'actuator_logs'
 
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db_remote = Database::getConnection('remote');
+        $this->db_local = Database::getConnection('local');
     }
 
     /**
-     * Trouve un actionneur par son ID.
+     * Trouve un actionneur par son ID depuis la BD distante.
      * @param int $id
      * @return array|false
      */
     public function findById($id) {
-        $stmt = $this->db->prepare("
-            SELECT id, nom as name, type, team_id, is_active, current_state
+        $stmt = $this->db_remote->prepare("
+            SELECT id, nom as name, type, is_active, current_state
             FROM actionneurs
             WHERE id = ?
         ");
@@ -23,105 +26,93 @@ class Actuator {
     }
 
     /**
-     * Récupère tous les actionneurs, actifs ou non.
+     * Récupère tous les actionneurs depuis la BD distante.
      * @return array
      */
     public function findAll() {
-        $stmt = $this->db->query("
-            SELECT a.id, a.nom as name, a.type, a.team_id, a.is_active, a.current_state, t.name as team_name
-            FROM actionneurs a
-            LEFT JOIN teams t ON a.team_id = t.id
-            ORDER BY t.name, a.nom
+        $stmt = $this->db_remote->query("
+            SELECT id, nom as name, type, is_active, current_state
+            FROM actionneurs
+            ORDER BY nom
         ");
         return $stmt->fetchAll();
     }
 
     /**
-     * Récupère tous les actionneurs qui sont marqués comme actifs dans le système.
+     * Récupère tous les actionneurs actifs depuis la BD distante.
      * @return array
      */
     public function findAllActive() {
-        $stmt = $this->db->query("
-            SELECT a.id, a.nom as name, a.type, a.team_id, a.is_active, a.current_state, t.name as team_name
-            FROM actionneurs a
-            LEFT JOIN teams t ON a.team_id = t.id
-            WHERE a.is_active = 1
-            ORDER BY t.name, a.nom
+        $stmt = $this->db_remote->query("
+            SELECT id, nom as name, type, is_active, current_state
+            FROM actionneurs
+            WHERE is_active = 1
+            ORDER BY nom
         ");
         return $stmt->fetchAll();
     }
     
     /**
-     * Récupère les dernières actions effectuées sur les actionneurs.
+     * Récupère l'activité récente en interrogeant les deux bases de données.
      * @param int $limit
      * @return array
      */
-    public function getRecentActivity($limit = 10) {
-        $stmt = $this->db->prepare("
-            SELECT
-                al.action, al.timestamp,
-                a.nom as actuator_name,
-                u.username,
-                t.name as team_name
-            FROM actuator_logs al
-            JOIN actionneurs a ON al.actionneur_id = a.id
-            JOIN user u ON al.user_id = u.id_user
-            LEFT JOIN teams t ON a.team_id = t.id
-            ORDER BY al.timestamp DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$limit]);
-        return $stmt->fetchAll();
-    }
 
     /**
-     * Change l'état d'un actionneur et enregistre l'action.
-     * @param int $actuatorId
-     * @param string $action 'ON' ou 'OFF'
-     * @param string $userId
+     * Change l'état d'un actionneur (BD distante) et enregistre l'action (BD locale).
      * @return bool
      */
     public function toggleState($actuatorId, $action, $userId) {
         try {
-            $this->db->beginTransaction();
-
+            // 1. Mettre à jour la BD distante
+            $this->db_remote->beginTransaction();
             $newState = ($action === 'ON') ? 1 : 0;
+            $stmt_remote = $this->db_remote->prepare("UPDATE actionneurs SET current_state = ? WHERE id = ?");
+            $stmt_remote->execute([$newState, $actuatorId]);
+            $this->db_remote->commit();
             
-            $stmt = $this->db->prepare("UPDATE actionneurs SET current_state = ? WHERE id = ?");
-            $stmt->execute([$newState, $actuatorId]);
+            // 2. Journaliser dans la BD locale
+            $stmt_local = $this->db_local->prepare("INSERT INTO actuator_logs (actionneur_id, action, user_id) VALUES (?, ?, ?)");
+            $stmt_local->execute([$actuatorId, $action, $userId]);
 
-            $stmt = $this->db->prepare("INSERT INTO actuator_logs (actionneur_id, action, user_id) VALUES (?, ?, ?)");
-            $stmt->execute([$actuatorId, $action, $userId]);
-            
-            $this->db->commit();
             return true;
         } catch (Exception $e) {
-            $this->db->rollBack();
-            error_log("Erreur dans ActuatorModel::toggleState: " . $e->getMessage());
+            if ($this->db_remote->inTransaction()) {
+                $this->db_remote->rollBack();
+            }
+            error_log("Erreur toggleState multi-BD: " . $e->getMessage());
             return false;
         }
     }
     
-    public function create($name, $type, $teamId) {
-        $stmt = $this->db->prepare("INSERT INTO actionneurs (nom, type, team_id) VALUES (?, ?, ?)");
-        return $stmt->execute([$name, $type, $teamId]);
+    /**
+     * Crée un nouvel actionneur dans la BD distante.
+     * @return bool
+     */
+    public function create($name, $type) {
+        $stmt = $this->db_remote->prepare("INSERT INTO actionneurs (nom, type) VALUES (?, ?)");
+        return $stmt->execute([$name, $type]);
     }
 
+    /**
+     * Met à jour un actionneur dans la BD distante.
+     * @return bool
+     */
     public function update($id, $name, $isActive) {
-        $stmt = $this->db->prepare("UPDATE actionneurs SET nom = ?, is_active = ? WHERE id = ?");
+        $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ?, is_active = ? WHERE id = ?");
         return $stmt->execute([$name, $isActive, $id]);
     }
 
+    /**
+     * Supprime un actionneur de la BD distante.
+     * Note : Les logs dans la BD locale ne seront pas supprimés, ce qui est souvent le comportement souhaité.
+     * @return bool
+     */
     public function delete($id) {
-         try {
-            $this->db->beginTransaction();
-            // La suppression en cascade (ON DELETE CASCADE) dans la BDD devrait gérer les logs
-            $stmt = $this->db->prepare("DELETE FROM actionneurs WHERE id = ?");
-            $success = $stmt->execute([$id]);
-            $this->db->commit();
-            return $success;
+        try {
+            $stmt = $this->db_remote->prepare("DELETE FROM actionneurs WHERE id = ?");
+            return $stmt->execute([$id]);
         } catch (Exception $e) {
-            $this->db->rollBack();
             return false;
         }
     }

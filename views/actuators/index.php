@@ -56,7 +56,6 @@
                 <div class="card h-100 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
-                        <span class="badge bg-info"><?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?></span>
                     </div>
                     
                     <div class="card-body">
@@ -114,14 +113,13 @@
                         <!-- Informations techniques -->
                         <div class="mb-3">
                             <small class="text-muted d-block">
-                                ID: #<?= $actuator['id'] ?> | 
-                                Équipe: <?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?>
+                                ID: #<?= $actuator['id'] ?>
                             </small>
                         </div>
                         
                         <!-- Contrôles -->
                         <div class="d-grid gap-2">
-                            <?php if ($isAdmin || $actuator['team_id'] == $_SESSION['team_id']): ?>
+                            <?php if ($isAdmin): ?>
                                 <?php if ($actuator['current_state']): ?>
                                     <button 
                                         class="btn btn-danger"

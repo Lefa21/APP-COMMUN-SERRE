@@ -51,15 +51,6 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
-                        <label for="teamFilter" class="form-label">Filtrer par équipe:</label>
-                        <select id="teamFilter" class="form-select" onchange="filterSensors()">
-                            <option value="">Toutes les équipes</option>
-                            <?php foreach ($teams as $team): ?>
-                                <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
                         <label for="typeFilter" class="form-label">Filtrer par type:</label>
                         <select id="typeFilter" class="form-select" onchange="filterSensors()">
                             <option value="">Tous les types</option>
@@ -117,7 +108,7 @@
                         </thead>
                         <tbody>
                             <?php foreach ($sensors as $sensor): ?>
-                                <tr data-team="<?= $sensor['team_id'] ?>" 
+                                <tr  
                                     data-type="<?= $sensor['type'] ?>" 
                                     data-status="<?= $sensor['is_active'] ?>"
                                     class="sensor-row">
@@ -142,11 +133,6 @@
                                     </td>
                                     <td><?= ucfirst($sensor['type']) ?></td>
                                     <td><?= htmlspecialchars($sensor['unit']) ?></td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            <?= htmlspecialchars($sensor['team_name'] ?? 'Non assignée') ?>
-                                        </span>
-                                    </td>
                                     <td>
                                         <span class="badge bg-<?= $sensor['is_active'] ? 'success' : 'secondary' ?>">
                                             <?= $sensor['is_active'] ? 'Actif' : 'Inactif' ?>
@@ -237,16 +223,6 @@
                                        placeholder="Ex: °C, %, lux">
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="sensorTeam" class="form-label">Équipe *</label>
-                        <select class="form-select" id="sensorTeam" name="team_id" required>
-                            <option value="">Choisir une équipe</option>
-                            <?php foreach ($teams as $team): ?>
-                                <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -370,22 +346,19 @@ const sensorsData = <?= json_encode($sensors) ?>;
 
 // Filtrage des capteurs
 function filterSensors() {
-    const teamFilter = document.getElementById('teamFilter').value;
     const typeFilter = document.getElementById('typeFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     
     const rows = document.querySelectorAll('.sensor-row');
     
     rows.forEach(row => {
-        const team = row.dataset.team;
         const type = row.dataset.type;
         const status = row.dataset.status;
         
-        const teamMatch = !teamFilter || team === teamFilter;
         const typeMatch = !typeFilter || type === typeFilter;
         const statusMatch = !statusFilter || status === statusFilter;
         
-        if (teamMatch && typeMatch && statusMatch) {
+        if (typeMatch && statusMatch) {
             row.style.display = '';
         } else {
             row.style.display = 'none';

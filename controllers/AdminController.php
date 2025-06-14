@@ -3,20 +3,17 @@
 require_once BASE_PATH . '/controllers/BaseController.php';
 // On charge tous les modèles nécessaires
 require_once BASE_PATH . '/models/User.php';
-require_once BASE_PATH . '/models/Team.php';
 require_once BASE_PATH . '/models/Role.php';
 // Pour la gestion des logs, on pourrait aussi créer un LogModel
 
 class AdminController extends BaseController {
     
     private $userModel;
-    private $teamModel;
     private $roleModel;
 
     public function __construct() {
         parent::__construct();
         $this->userModel = new User();
-        $this->teamModel = new Team();
         $this->roleModel = new Role();
     }
     
@@ -25,13 +22,11 @@ class AdminController extends BaseController {
         
         // Les appels sont simples et directs vers les modèles
         $users = $this->userModel->findAllWithProfiles();
-        $teams = $this->teamModel->findAll();
         $roles = $this->roleModel->findAll();
         $stats = $this->userModel->getStats();
         
         $this->render('admin/users', [
             'users' => $users,
-            'teams' => $teams,
             'roles' => $roles,
             'stats' => $stats
         ]);
@@ -119,11 +114,14 @@ class AdminController extends BaseController {
 
     // --- Méthodes privées du contrôleur (logique applicative) ---
 
-    private function createUser() {
-        // ... (récupération et validation des données POST)
+private function createUser() {
+        // 1. Récupération et validation des données POST
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
+        $roleId = (int)($_POST['role_id'] ?? 1); // Rôle 'etudiant' par défaut
+        $firstName = trim($_POST['first_name'] ?? '');
+        $lastName = trim($_POST['last_name'] ?? '');
 
         if (empty($username) || !$this->validateEmail($email) || strlen($password) < 6) {
             $this->setMessage('Données de création invalides.', 'error');
@@ -135,22 +133,22 @@ class AdminController extends BaseController {
             return;
         }
 
+        // 2. Appel unique au modèle avec toutes les informations
+        // La méthode du modèle gère maintenant l'assignation du rôle.
         $userId = $this->userModel->create(
-            $username, $email, $password,
-            $_POST['team_id'] ?? null,
-            $_POST['first_name'] ?? '',
-            $_POST['last_name'] ?? ''
+            $username,
+            $email,
+            $password,
+            $roleId, // On passe le rôle directement
+            $firstName,
+            $lastName
         );
 
+        // 3. Affichage du message de résultat
         if ($userId) {
-            // Mettre à jour le rôle si différent de l'étudiant par défaut
-            $roleId = (int)($_POST['role_id'] ?? 1);
-            if ($roleId !== 1) {
-                $this->db->prepare("UPDATE user SET role_id = ? WHERE id_user = ?")->execute([$roleId, $userId]);
-            }
-            $this->setMessage('Utilisateur créé avec succès', 'success');
+            $this->setMessage('Utilisateur créé avec succès.', 'success');
         } else {
-            $this->setMessage('Erreur lors de la création de l\'utilisateur', 'error');
+            $this->setMessage('Erreur lors de la création de l\'utilisateur.', 'error');
         }
     }
     
@@ -162,7 +160,6 @@ class AdminController extends BaseController {
             'first_name' => trim($_POST['first_name'] ?? ''),
             'last_name' => trim($_POST['last_name'] ?? ''),
             'role_id' => (int)($_POST['role_id'] ?? 1),
-            'team_id' => (int)($_POST['team_id'] ?? 0),
         ];
 
         if (empty($userId) || empty($data['username']) || !$this->validateEmail($data['email'])) {

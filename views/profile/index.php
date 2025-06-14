@@ -85,20 +85,6 @@
                                        value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="team_id" class="form-label">Équipe</label>
-                                <select class="form-select" id="team_id" name="team_id">
-                                    <option value="">Aucune équipe</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?= $team['id'] ?>" 
-                                            <?= (isset($user['team_id']) && $user['team_id'] == $team['id']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($team['name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="d-grid">
@@ -248,54 +234,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Activité récente -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">📈 Activité récente</h5>
-                <a href="<?= BASE_URL ?>?controller=profile&action=activity" class="btn btn-outline-primary btn-sm">
-                    Voir tout
-                </a>
-            </div>
-            <div class="card-body">
-                <?php if (empty($recentActivity)): ?>
-                    <p class="text-muted text-center py-3">Aucune activité récente</p>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Action</th>
-                                    <th>Actionneur</th>
-                                    <th>Équipe</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recentActivity as $activity): ?>
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-<?= $activity['action'] === 'ON' ? 'success' : 'secondary' ?>">
-                                                <?= $activity['action'] ?>
-                                            </span>
-                                        </td>
-                                        <td><?= htmlspecialchars($activity['actuator_name']) ?></td>
-                                        <td><?= htmlspecialchars($activity['team_name'] ?? 'N/A') ?></td>
-                                        <td>
-                                            <small><?= date('d/m H:i', strtotime($activity['timestamp'])) ?></small>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -30,8 +30,7 @@
                                 <?= strtoupper($alert['alert_level']) ?>
                             </span>
                             <small>
-                                <strong><?= htmlspecialchars($alert['name']) ?></strong> 
-                                (<?= htmlspecialchars($alert['team_name']) ?>): 
+                                <strong><?= htmlspecialchars($alert['name']) ?></strong>: 
                                 <?= $alert['value'] ?> <?= $alert['unit'] ?>
                             </small>
                         </div>
@@ -59,17 +58,6 @@
                             <option value="light">Luminosité</option>
                             <option value="ph">pH</option>
                             <option value="co2">CO2</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="teamFilter" class="form-label">Filtrer par équipe:</label>
-                        <select id="teamFilter" class="form-select" onchange="filterSensors()">
-                            <option value="">Toutes les équipes</option>
-                            <option value="1">Équipe Alpha</option>
-                            <option value="2">Équipe Beta</option>
-                            <option value="3">Équipe Gamma</option>
-                            <option value="4">Équipe Delta</option>
-                            <option value="5">Équipe Epsilon</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -107,12 +95,10 @@
     <?php else: ?>
         <?php foreach ($sensors as $sensor): ?>
             <div class="col-lg-4 col-md-6 mb-4 sensor-card" 
-                 data-type="<?= $sensor['type'] ?>" 
-                 data-team="<?= $sensor['team_id'] ?>">
+                 data-type="<?= $sensor['type'] ?>">
                 <div class="card h-100 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($sensor['name']) ?></h6>
-                        <span class="badge bg-secondary"><?= htmlspecialchars($sensor['team_name'] ?? 'Équipe 1') ?></span>
                     </div>
                     
                     <div class="card-body">
@@ -243,9 +229,6 @@
                     <!-- Footer -->
                     <div class="card-footer">
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <?= htmlspecialchars($sensor['team_name'] ?? 'Équipe 1') ?>
-                            </small>
                             <div class="status-indicator <?= $sensor['value'] !== null ? 'status-on' : 'status-off' ?>"></div>
                         </div>
                     </div>
@@ -354,17 +337,14 @@ function createMiniChart(sensorId) {
 
 function filterSensors() {
     const typeFilter = document.getElementById('typeFilter').value;
-    const teamFilter = document.getElementById('teamFilter').value;
     const cards = document.querySelectorAll('.sensor-card');
     
     cards.forEach(card => {
         const cardType = card.dataset.type;
-        const cardTeam = card.dataset.team;
         
         const typeMatch = !typeFilter || cardType === typeFilter;
-        const teamMatch = !teamFilter || cardTeam === teamFilter;
         
-        if (typeMatch && teamMatch) {
+        if (typeMatch) {
             card.style.display = 'block';
         } else {
             card.style.display = 'none';

@@ -65,10 +65,6 @@
                                 <td><strong>Unité:</strong></td>
                                 <td><?= htmlspecialchars($sensor['unit']) ?></td>
                             </tr>
-                            <tr>
-                                <td><strong>Équipe:</strong></td>
-                                <td><?= htmlspecialchars($sensor['team_name'] ?? 'Non assignée') ?></td>
-                            </tr>
                         </table>
                     </div>
                     <div class="col-md-6">

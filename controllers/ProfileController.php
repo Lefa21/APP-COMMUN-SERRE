@@ -2,18 +2,15 @@
 // controllers/ProfileController.php
 require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/User.php';
-require_once BASE_PATH . '/models/Team.php';
 // Note: Le modèle Notification est maintenant intégré dans le modèle User pour plus de simplicité.
 
 class ProfileController extends BaseController {
     
     private $userModel;
-    private $teamModel;
 
     public function __construct() {
         parent::__construct();
         $this->userModel = new User();
-        $this->teamModel = new Team();
     }
     
     /**
@@ -25,14 +22,10 @@ class ProfileController extends BaseController {
         $userId = $_SESSION['user_id'];
         
         $user = $this->userModel->findById($userId);
-        $teams = $this->teamModel->findAll();
-        $recentActivity = $this->userModel->getActivity($userId, 5); // Limite à 5 pour l'aperçu
         $stats = $this->userModel->getUserStats($userId); // Assumant que cette méthode existe dans User Model
         
         $this->render('profile/index', [
             'user' => $user,
-            'teams' => $teams,
-            'recentActivity' => $recentActivity,
             'stats' => $stats,
         ]);
     }
@@ -167,7 +160,6 @@ class ProfileController extends BaseController {
             'last_name' => trim($_POST['last_name'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
             'phone' => trim($_POST['phone'] ?? ''),
-            'team_id' => (int)($_POST['team_id'] ?? 0),
         ];
 
         if (!$this->validateEmail($data['email'])) {

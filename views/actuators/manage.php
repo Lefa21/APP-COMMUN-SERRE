@@ -17,9 +17,6 @@
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addActuatorModal">
                     <i class="bi bi-plus-circle"></i> Ajouter un actionneur
                 </button>
-                <button class="btn btn-warning" onclick="toggleAllActuators('OFF')">
-                    <i class="bi bi-stop-circle"></i> Tout arrêter
-                </button>
                 <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#statusModal">
                     <i class="bi bi-activity"></i> État du système
                 </button>
@@ -68,15 +65,6 @@
         <div class="card">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
-                        <label for="teamFilter" class="form-label">Filtrer par équipe:</label>
-                        <select id="teamFilter" class="form-select" onchange="filterActuators()">
-                            <option value="">Toutes les équipes</option>
-                            <?php foreach ($teams as $team): ?>
-                                <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
                     <div class="col-md-4">
                         <label for="typeFilter" class="form-label">Filtrer par type:</label>
                         <select id="typeFilter" class="form-select" onchange="filterActuators()">
@@ -144,13 +132,11 @@
     <?php else: ?>
         <?php foreach ($actuators as $actuator): ?>
             <div class="col-lg-4 col-md-6 mb-4 actuator-card" 
-                 data-team="<?= $actuator['team_id'] ?>" 
                  data-type="<?= $actuator['type'] ?>" 
                  data-state="<?= $actuator['current_state'] ?>">
                 <div class="card h-100 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
-                        <span class="badge bg-info"><?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?></span>
                     </div>
                     
                     <div class="card-body">
@@ -208,44 +194,8 @@
                         <!-- Informations techniques -->
                         <div class="mb-3">
                             <small class="text-muted d-block">
-                                ID: #<?= $actuator['id'] ?> | 
-                                Équipe: <?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?>
+                                ID: #<?= $actuator['id'] ?>
                             </small>
-                        </div>
-                        
-                        <!-- Contrôles -->
-                        <div class="d-grid gap-2">
-                            <?php if ($actuator['current_state']): ?>
-                                <button 
-                                    class="btn btn-danger"
-                                    id="toggle-btn-<?= $actuator['id'] ?>"
-                                    data-actuator-id="<?= $actuator['id'] ?>"
-                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')"
-                                    <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
-                                    <i class="bi bi-stop-circle"></i> Arrêter
-                                </button>
-                            <?php else: ?>
-                                <button 
-                                    class="btn btn-success"
-                                    id="toggle-btn-<?= $actuator['id'] ?>"
-                                    data-actuator-id="<?= $actuator['id'] ?>"
-                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')"
-                                    <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
-                                    <i class="bi bi-play-circle"></i> Démarrer
-                                </button>
-                            <?php endif; ?>
-                            
-                            <!-- Boutons de gestion -->
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-outline-warning btn-sm" 
-                                        onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
-                                    <i class="bi bi-pencil"></i> Modifier
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" 
-                                        onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
-                                    <i class="bi bi-trash"></i> Supprimer
-                                </button>
-                            </div>
                         </div>
                         
                         <?php if (!$actuator['is_active']): ?>
@@ -289,7 +239,6 @@
                                 <th>État</th>
                                 <th>Statut</th>
                                 <th>Dernière action</th>
-                                <th>Contrôles</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -319,9 +268,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">
-                                            <?= htmlspecialchars($actuator['team_name'] ?? 'Non assignée') ?>
-                                        </span>
+        
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
@@ -340,30 +287,6 @@
                                         <small class="text-muted" id="last-action-<?= $actuator['id'] ?>">
                                             Inconnue
                                         </small>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <?php if ($actuator['is_active']): ?>
-                                                <button class="btn <?= $actuator['current_state'] ? 'btn-danger' : 'btn-success' ?>" 
-                                                        onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['current_state'] ? 'OFF' : 'ON' ?>')">
-                                                    <i class="bi bi-<?= $actuator['current_state'] ? 'stop' : 'play' ?>-circle"></i>
-                                                    <?= $actuator['current_state'] ? 'Arrêter' : 'Démarrer' ?>
-                                                </button>
-                                            <?php else: ?>
-                                                <button class="btn btn-secondary btn-sm" disabled>
-                                                    <i class="bi bi-ban"></i> Désactivé
-                                                </button>
-                                            <?php endif; ?>
-                                            
-                                            <button class="btn btn-outline-warning btn-sm" 
-                                                    onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm" 
-                                                    onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -462,17 +385,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="actuatorTeam" class="form-label">Équipe *</label>
-                                <select class="form-select" id="actuatorTeam" name="team_id" required>
-                                    <option value="">Choisir une équipe</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?= $team['id'] ?>"><?= htmlspecialchars($team['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="alert alert-info">
@@ -556,15 +468,11 @@
                             <li>🔧 Actionneurs configurés: <strong><?= count($actuators) ?></strong></li>
                             <li>✅ Actionneurs actifs: <strong><?= count(array_filter($actuators, function($a) { return $a['is_active']; })) ?></strong></li>
                             <li>⚡ Actionneurs en marche: <strong id="runningCount"><?= count(array_filter($actuators, function($a) { return $a['current_state']; })) ?></strong></li>
-                            <li>👥 Équipes: <strong><?= count($teams) ?></strong></li>
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <h6>🎛️ Actions système</h6>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-warning" onclick="toggleAllActuators('OFF')">
-                                <i class="bi bi-stop-circle"></i> Arrêter tout
-                            </button>
                             <button class="btn btn-info" onclick="refreshSystemStatus()">
                                 <i class="bi bi-arrow-clockwise"></i> Actualiser statut
                             </button>
@@ -589,7 +497,6 @@ const actuatorsData = <?= json_encode($actuators) ?>;
 
 // Filtrage des actionneurs
 function filterActuators() {
-    const teamFilter = document.getElementById('teamFilter').value;
     const typeFilter = document.getElementById('typeFilter').value;
     const stateFilter = document.getElementById('stateFilter').value;
     
@@ -597,15 +504,13 @@ function filterActuators() {
     let visibleCount = 0;
     
     cards.forEach(card => {
-        const team = card.dataset.team;
         const type = card.dataset.type;
         const state = card.dataset.state;
         
-        const teamMatch = !teamFilter || team === teamFilter;
         const typeMatch = !typeFilter || type === typeFilter;
         const stateMatch = !stateFilter || state === stateFilter;
         
-        if (teamMatch && typeMatch && stateMatch) {
+        if (typeMatch && stateMatch) {
             card.style.display = '';
             visibleCount++;
         } else {

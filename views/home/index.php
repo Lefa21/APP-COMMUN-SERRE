@@ -32,10 +32,6 @@
                         <h3 class="text-info">5</h3>
                         <p class="mb-0">Équipes</p>
                     </div>
-                    <div class="col-md-<?= $isAdmin ? '3' : '4' ?>">
-                        <h3 class="text-warning"><?= count($recentActivity) ?></h3>
-                        <p class="mb-0">Actions Récentes</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -70,7 +66,6 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title mb-0"><?= htmlspecialchars($sensor['name']) ?></h6>
-                            <span class="badge bg-secondary"><?= htmlspecialchars($sensor['team_name'] ?? 'Équipe 1') ?></span>
                         </div>
                         
                         <div class="d-flex align-items-center mb-2">
@@ -192,7 +187,6 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h6 class="card-title mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
-                                <span class="badge bg-info"><?= htmlspecialchars($actuator['team_name'] ?? 'Équipe 1') ?></span>
                             </div>
                             
                             <div class="d-flex align-items-center mb-2">
@@ -218,13 +212,6 @@
                                         <?= $actuator['current_state'] ? 'Actif' : 'Inactif' ?>
                                     </span>
                                 </div>
-                                
-                                <button 
-                                    class="btn <?= $actuator['current_state'] ? 'btn-danger' : 'btn-success' ?> btn-sm"
-                                    data-actuator-id="<?= $actuator['id'] ?>"
-                                    onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['current_state'] ? 'OFF' : 'ON' ?>')">
-                                    <?= $actuator['current_state'] ? 'Arrêter' : 'Démarrer' ?>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -246,57 +233,6 @@
                             Vous pouvez consulter les données des capteurs et surveiller l'état de votre serre.
                         </p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>
-
-<!-- Activité récente - SEULEMENT pour les administrateurs -->
-<?php if ($isAdmin): ?>
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">📋 Activité Récente des Actionneurs</h5>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($recentActivity)): ?>
-                        <p class="text-muted mb-0">Aucune activité récente</p>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Action</th>
-                                        <th>Actionneur</th>
-                                        <th>Utilisateur</th>
-                                        <th>Équipe</th>
-                                        <th>Date/Heure</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($recentActivity as $activity): ?>
-                                        <tr>
-                                            <td>
-                                                <span class="badge <?= $activity['action'] === 'ON' ? 'bg-success' : 'bg-secondary' ?>">
-                                                    <?= $activity['action'] ?>
-                                                </span>
-                                            </td>
-                                            <td><?= htmlspecialchars($activity['actuator_name']) ?></td>
-                                            <td>👤 <?= htmlspecialchars($activity['username']) ?></td>
-                                            <td><?= htmlspecialchars($activity['team_name'] ?? 'N/A') ?></td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    <?= date('d/m H:i', strtotime($activity['timestamp'])) ?>
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

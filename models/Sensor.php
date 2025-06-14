@@ -3,103 +3,35 @@
 class Sensor {
     private $db;
     
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+  public function __construct() {
+        // Ce modèle gère les capteurs et mesures, qui sont sur la BD distante.
+        $this->db = Database::getConnection('local');
     }
     
-    public function getAllSensors() {
-        $stmt = $this->db->query("
-            SELECT c.id, c.nom as name, c.type, c.unite as unit, 
-                   COALESCE(c.team_id, 1) as team_id, 
-                   COALESCE(c.is_active, 1) as is_active,
-                   t.name as team_name 
-            FROM capteurs c
-            LEFT JOIN teams t ON c.team_id = t.id
-            WHERE COALESCE(c.is_active, 1) = 1
-            ORDER BY t.name, c.nom
-        ");
-        return $stmt->fetchAll();
-    }
-    
-    public function getSensorsByTeam($teamId) {
-        $stmt = $this->db->prepare("
-            SELECT c.id, c.nom as name, c.type, c.unite as unit, 
-                   COALESCE(c.team_id, 1) as team_id,
-                   COALESCE(c.is_active, 1) as is_active,
-                   t.name as team_name 
-            FROM capteurs c
-            LEFT JOIN teams t ON c.team_id = t.id
-            WHERE COALESCE(c.team_id, 1) = ? AND COALESCE(c.is_active, 1) = 1
-            ORDER BY c.nom
-        ");
-        $stmt->execute([$teamId]);
-        return $stmt->fetchAll();
-    }
+
     
     public function getSensorWithLatestData($sensorId) {
+    $stmt = $this->db->prepare("
+        SELECT 
+            c.id, c.nom as name, c.type, c.unite as unit,
+            m.valeur as value,
+            m.date_heure as last_reading
+        FROM capteurs c
+        LEFT JOIN mesures m ON c.id = m.capteur_id
+        WHERE c.id = ?
+        ORDER BY m.date_heure DESC
+        LIMIT 1
+    ");
+    $stmt->execute([$sensorId]);
+    return $stmt->fetch();
+}
+     
+    public function addSensor($name, $type, $unit) {
         $stmt = $this->db->prepare("
-            SELECT 
-                c.id, c.nom as name, c.type, c.unite as unit,
-                COALESCE(c.team_id, 1) as team_id,
-                t.name as team_name,
-                m.valeur as value,
-                m.date_heure as last_reading
-            FROM capteurs c
-            LEFT JOIN teams t ON c.team_id = t.id
-            LEFT JOIN mesures m ON c.id = m.capteur_id
-            WHERE c.id = ?
-            ORDER BY m.date_heure DESC
-            LIMIT 1
-        ");
-        $stmt->execute([$sensorId]);
-        return $stmt->fetch();
-    }
-    
-    public function getSensorData($sensorId, $limit = 100, $startDate = null, $endDate = null) {
-        $sql = "
-            SELECT valeur as value, date_heure as timestamp 
-            FROM mesures 
-            WHERE capteur_id = ?
-        ";
-        $params = [$sensorId];
-        
-        if ($startDate) {
-            $sql .= " AND date_heure >= ?";
-            $params[] = $startDate;
-        }
-        
-        if ($endDate) {
-            $sql .= " AND date_heure <= ?";
-            $params[] = $endDate;
-        }
-        
-        $sql .= " ORDER BY date_heure DESC LIMIT ?";
-        $params[] = $limit;
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
-    }
-    
-    public function addSensorData($sensorId, $value) {
-        $stmt = $this->db->prepare("
-            INSERT INTO mesures (capteur_id, valeur) 
-            VALUES (?, ?)
-        ");
-        return $stmt->execute([$sensorId, $value]);
-    }
-    
-    public function addSensor($name, $type, $unit, $teamId) {
-        $stmt = $this->db->prepare("
-            INSERT INTO capteurs (nom, type, unite, team_id) 
+            INSERT INTO capteurs (nom, type, unite) 
             VALUES (?, ?, ?, ?)
         ");
-        return $stmt->execute([$name, $type, $unit, $teamId]);
-    }
-
-     public function create($name, $type, $unit, $teamId) {
-        $stmt = $this->db->prepare("INSERT INTO capteurs (nom, type, unite, team_id) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$name, $type, $unit, $teamId]);
+        return $stmt->execute([$name, $type, $unit]);
     }
     
     public function updateSensor($id, $name, $type, $unit, $isActive) {
@@ -121,82 +53,6 @@ class Sensor {
         return $stmt->execute([$id]);
     }
     
-    public function getStatistics($sensorId, $period = '24h') {
-        $dateCondition = '';
-        switch ($period) {
-            case '1h':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)";
-                break;
-            case '24h':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-                break;
-            case '7d':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
-                break;
-            case '30d':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-                break;
-            default:
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-        }
-        
-        $stmt = $this->db->prepare("
-            SELECT 
-                COUNT(*) as total_readings,
-                AVG(valeur) as avg_value,
-                MIN(valeur) as min_value,
-                MAX(valeur) as max_value,
-                STDDEV(valeur) as std_dev
-            FROM mesures 
-            WHERE capteur_id = ? AND {$dateCondition}
-        ");
-        $stmt->execute([$sensorId]);
-        return $stmt->fetch();
-    }
-    
-    public function getAggregatedData($sensorId, $interval = 'hour', $period = '24h') {
-        $dateCondition = '';
-        $groupBy = '';
-        
-        switch ($period) {
-            case '24h':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-                break;
-            case '7d':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
-                break;
-            case '30d':
-                $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-                break;
-        }
-        
-        switch ($interval) {
-            case 'hour':
-                $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d %H:00:00')";
-                break;
-            case 'day':
-                $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d')";
-                break;
-            case 'minute':
-                $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d %H:%i:00')";
-                break;
-        }
-        
-        $stmt = $this->db->prepare("
-            SELECT 
-                {$groupBy} as time_group,
-                AVG(valeur) as avg_value,
-                MIN(valeur) as min_value,
-                MAX(valeur) as max_value,
-                COUNT(*) as reading_count
-            FROM mesures 
-            WHERE capteur_id = ? AND {$dateCondition}
-            GROUP BY time_group
-            ORDER BY time_group
-        ");
-        $stmt->execute([$sensorId]);
-        return $stmt->fetchAll();
-    }
     
     public function simulateData($sensorId) {
         // Fonction pour simuler des données de capteur (utile pour les tests)
@@ -239,16 +95,69 @@ class Sensor {
         
         return $this->addSensorData($sensorId, $value);
     }
+    
+    
+    /**
+ * Récupère les alertes actives basées sur des seuils prédéfinis.
+ * @return array
+ */
+public function getAlerts() {
+    $sql = "
+        SELECT 
+            c.id, 
+            c.nom as name, 
+            c.type, 
+            c.unite as unit,
+            m.valeur as value, 
+            m.date_heure as timestamp,
+            CASE 
+                WHEN c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35) THEN 'critical'
+                WHEN c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90) THEN 'warning'
+                WHEN c.type = 'soil_moisture' AND m.valeur < 25 THEN 'critical'
+                ELSE 'normal'
+            END as alert_level
+        FROM capteurs c
+        -- On joint uniquement la dernière mesure de chaque capteur
+        JOIN mesures m ON m.id = (
+            SELECT id FROM mesures sub_m
+            WHERE sub_m.capteur_id = c.id
+            ORDER BY date_heure DESC
+            LIMIT 1
+        )
+        -- On filtre ensuite sur les conditions d'alerte
+        WHERE c.is_active = 1
+        AND m.date_heure >= DATE_SUB(NOW(), INTERVAL 1 HOUR) -- Uniquement les alertes récentes
+        AND (
+            (c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35)) OR
+            (c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90)) OR
+            (c.type = 'soil_moisture' AND m.valeur < 25)
+        )
+    ";
+    
+    $stmt = $this->db->query($sql);
+    return $stmt->fetchAll();
+}
 
-     public function getAllSensorsWithLastReading() {
-        // Cette requête utilise une sous-requête pour trouver la dernière mesure de chaque capteur de manière efficace.
+
+    public function getAllSensors() {
+        $stmt = $this->db->query("
+            SELECT id, nom as name, type, unite as unit, is_active
+            FROM capteurs
+            ORDER BY nom
+        ");
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Récupère tous les capteurs actifs avec leur dernière lecture.
+     * @return array
+     */
+    public function getAllSensorsWithLastReading() {
         $stmt = $this->db->query("
             SELECT 
                 c.id, c.nom as name, c.type, c.unite as unit, 
-                c.team_id, t.name as team_name,
                 m.valeur as value, m.date_heure as timestamp
             FROM capteurs c
-            LEFT JOIN teams t ON c.team_id = t.id
             LEFT JOIN mesures m ON m.id = (
                 SELECT id FROM mesures
                 WHERE capteur_id = c.id
@@ -256,16 +165,124 @@ class Sensor {
                 LIMIT 1
             )
             WHERE c.is_active = 1
-            ORDER BY t.name, c.nom
+            ORDER BY c.nom
         ");
         return $stmt->fetchAll();
     }
     
-     public function countActive() {
+    /**
+     * Crée un nouveau capteur.
+     * @return bool
+     */
+    public function create($name, $type, $unit) {
+        $stmt = $this->db->prepare("INSERT INTO capteurs (nom, type, unite) VALUES (?, ?, ?)");
+        return $stmt->execute([$name, $type, $unit]);
+    }
+
+    /**
+     * Met à jour un capteur existant.
+     * @return bool
+     */
+    public function update($id, $name, $type, $unit, $isActive) {
+        $stmt = $this->db->prepare("
+            UPDATE capteurs 
+            SET nom = ?, type = ?, unite = ?, is_active = ? 
+            WHERE id = ?
+        ");
+        return $stmt->execute([$name, $type, $unit, $isActive, $id]);
+    }
+
+    /**
+     * Supprime un capteur et ses données associées.
+     * @return bool
+     */
+    public function delete($id) {
+        // La contrainte ON DELETE CASCADE dans la BDD devrait s'occuper des mesures.
+        // Sinon, il faudrait décommenter la ligne suivante :
+        // $this->db->prepare("DELETE FROM mesures WHERE capteur_id = ?")->execute([$id]);
+        
+        $stmt = $this->db->prepare("DELETE FROM capteurs WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+    /**
+     * Récupère l'historique des données pour un capteur.
+     * @return array
+     */
+    public function getSensorData($sensorId, $limit = 100, $startDate = null, $endDate = null) {
+        $sql = "SELECT valeur as value, date_heure as timestamp FROM mesures WHERE capteur_id = ?";
+        $params = [$sensorId];
+        if ($startDate) { $sql .= " AND date_heure >= ?"; $params[] = $startDate; }
+        if ($endDate) { $sql .= " AND date_heure <= ?"; $params[] = $endDate; }
+        $sql .= " ORDER BY date_heure DESC LIMIT ?";
+        $params[] = $limit;
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Ajoute une nouvelle mesure pour un capteur.
+     * @return bool
+     */
+    public function addSensorData($sensorId, $value) {
+        $stmt = $this->db->prepare("INSERT INTO mesures (capteur_id, valeur) VALUES (?, ?)");
+        return $stmt->execute([$sensorId, $value]);
+    }
+
+    /**
+     * Récupère les statistiques pour un capteur sur une période donnée.
+     * @return array|false
+     */
+    public function getStatistics($sensorId, $period = '24h') {
+        $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL " . $this->periodToInterval($period) . ")";
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) as total_readings, AVG(valeur) as avg_value, MIN(valeur) as min_value,
+                   MAX(valeur) as max_value, STDDEV(valeur) as std_dev
+            FROM mesures WHERE capteur_id = ? AND {$dateCondition}
+        ");
+        $stmt->execute([$sensorId]);
+        return $stmt->fetch();
+    }
+    
+    /**
+     * Récupère des données agrégées pour les graphiques.
+     * @return array
+     */
+    public function getAggregatedData($sensorId, $interval = 'hour', $period = '24h') {
+        $dateCondition = "date_heure >= DATE_SUB(NOW(), INTERVAL " . $this->periodToInterval($period) . ")";
+        
+        switch ($interval) {
+            case 'day': $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d')"; break;
+            case 'minute': $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d %H:%i:00')"; break;
+            case 'hour':
+            default: $groupBy = "DATE_FORMAT(date_heure, '%Y-%m-%d %H:00:00')";
+        }
+        
+        $stmt = $this->db->prepare("
+            SELECT {$groupBy} as time_group, AVG(valeur) as avg_value
+            FROM mesures WHERE capteur_id = ? AND {$dateCondition}
+            GROUP BY time_group ORDER BY time_group
+        ");
+        $stmt->execute([$sensorId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Compte le nombre de capteurs actifs.
+     * @return int
+     */
+    public function countActive() {
         return (int) $this->db->query("SELECT COUNT(*) FROM capteurs WHERE is_active = 1")->fetchColumn();
     }
 
-     private function periodToInterval($period) {
+    /**
+     * Helper privé pour convertir la période en intervalle SQL.
+     * @param string $period
+     * @return string
+     */
+    private function periodToInterval($period) {
         switch ($period) {
             case '1h': return '1 HOUR';
             case '7d': return '7 DAY';
@@ -273,42 +290,6 @@ class Sensor {
             case '24h':
             default: return '24 HOUR';
         }
-    }
-    
-    public function getAlerts($teamId = null) {
-        // Récupérer les alertes basées sur des seuils prédéfinis
-        $sql = "
-            SELECT 
-                s.id, s.name, s.type, s.unit,
-                t.name as team_name,
-                sd.value, sd.timestamp,
-                CASE 
-                    WHEN s.type = 'temperature' AND (sd.value < 15 OR sd.value > 35) THEN 'critical'
-                    WHEN s.type = 'humidity' AND (sd.value < 30 OR sd.value > 90) THEN 'warning'
-                    WHEN s.type = 'soil_moisture' AND sd.value < 25 THEN 'critical'
-                    ELSE 'normal'
-                END as alert_level
-            FROM sensors s
-            JOIN teams t ON s.team_id = t.id
-            JOIN sensor_data sd ON s.id = sd.sensor_id
-            WHERE s.is_active = 1
-            AND sd.timestamp >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
-            AND (
-                (s.type = 'temperature' AND (sd.value < 15 OR sd.value > 35)) OR
-                (s.type = 'humidity' AND (sd.value < 30 OR sd.value > 90)) OR
-                (s.type = 'soil_moisture' AND sd.value < 25)
-            )
-        ";
-        
-        if ($teamId) {
-            $sql .= " AND s.team_id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$teamId]);
-        } else {
-            $stmt = $this->db->query($sql);
-        }
-        
-        return $stmt->fetchAll();
     }
 }
 ?>

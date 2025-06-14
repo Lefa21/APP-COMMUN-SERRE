@@ -772,7 +772,7 @@ function exportAllData() {
     let csv = 'Capteur,Type,Valeur,Unité,Équipe,Timestamp\n';
     
     sensorsData.forEach(sensor => {
-        csv += `"${sensor.name}","${sensor.type}",${sensor.value || ''},"${sensor.unit}","${sensor.team_name || ''}","${sensor.timestamp || ''}"\n`;
+        csv += `"${sensor.name}","${sensor.type}",${sensor.value || ''},"${sensor.unit}","${sensor.timestamp || ''}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });

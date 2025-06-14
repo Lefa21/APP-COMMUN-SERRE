@@ -4,21 +4,18 @@ require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/Sensor.php';
 require_once BASE_PATH . '/models/Actuator.php';
 require_once BASE_PATH . '/models/User.php';
-require_once BASE_PATH . '/models/Team.php';
 
 class ApiController extends BaseController {
     
     private $sensorModel;
     private $actuatorModel;
     private $userModel;
-    private $teamModel;
     
     public function __construct() {
         parent::__construct();
         $this->sensorModel = new Sensor();
         $this->actuatorModel = new Actuator();
         $this->userModel = new User();
-        $this->teamModel = new Team();
     }
     
     /**
@@ -127,26 +124,54 @@ class ApiController extends BaseController {
     /**
      * Endpoint de santé du système.
      */
-    public function health() {
-        try {
-            $db_status = $this->db->query("SELECT 1") ? 'connected' : 'disconnected';
-            
-            $health = [
-                'status' => 'healthy',
-                'database' => $db_status,
-                'sensors' => ['active' => $this->sensorModel->countActive()],
-                'timestamp' => date('Y-m-d H:i:s')
-            ];
+     public function health() {
+        $health = [
+            'status' => 'healthy',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'databases' => [],
+            'services' => []
+        ];
 
-            if ($health['sensors']['active'] === 0) {
-                $health['status'] = 'warning';
-                $health['message'] = 'Aucun capteur actif';
-            }
-            
-            $this->jsonResponse($health);
+        // 1. Vérifier la connexion à la base de données LOCALE
+        try {
+            $db_local = Database::getConnection('local');
+            $db_local->query("SELECT 1");
+            $health['databases']['local'] = 'connected';
         } catch (Exception $e) {
-            $this->jsonResponse(['status' => 'error', 'database' => 'disconnected'], 503);
+            $health['databases']['local'] = 'disconnected';
+            $health['status'] = 'error'; // Le statut global passe à 'error'
         }
+
+        // 2. Vérifier la connexion à la base de données DISTANTE
+        try {
+            $db_remote = Database::getConnection('remote');
+            $db_remote->query("SELECT 1");
+            $health['databases']['remote'] = 'connected';
+        } catch (Exception $e) {
+            $health['databases']['remote'] = 'disconnected';
+            $health['status'] = 'error'; // Le statut global passe à 'error'
+        }
+
+        // 3. Si les BDs sont OK, vérifier la logique applicative
+        if ($health['status'] === 'healthy') {
+            try {
+                $activeSensors = $this->sensorModel->countActive();
+                $health['services']['sensors'] = ['status' => 'operational', 'active' => $activeSensors];
+                
+                if ($activeSensors === 0) {
+                    $health['status'] = 'warning'; // Le statut global passe à 'warning'
+                    $health['message'] = 'Aucun capteur actif détecté.';
+                }
+            } catch (Exception $e) {
+                $health['services']['sensors'] = ['status' => 'degraded', 'error' => 'Impossible de compter les capteurs'];
+                $health['status'] = 'warning';
+            }
+        }
+        
+        // Déterminer le code de statut HTTP final
+        $statusCode = ($health['status'] === 'error') ? 503 : 200; // 503 Service Unavailable
+
+        $this->jsonResponse($health, $statusCode);
     }
 
     // --- Méthodes privées du contrôleur ---
