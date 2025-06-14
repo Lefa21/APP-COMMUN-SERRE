@@ -158,86 +158,104 @@
     <?php endif; ?>
 </div>
 
-<!-- Section Actionneurs - SEULEMENT pour les administrateurs -->
-<?php if ($isAdmin): ?>
-    <div class="row mb-4 mt-5">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3>⚡ Contrôle des Actionneurs</h3>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>⚡ Actionneurs</h1>
+            <?php if ($isAdmin): ?>
                 <a href="<?= BASE_URL ?>?controller=actuator&action=manage" class="btn btn-outline-primary">
                     Voir tous les actionneurs
                 </a>
-            </div>
-            <p class="text-muted">Vous avez les privilèges administrateur pour contrôler tous les actionneurs</p>
+            <?php endif; ?>
         </div>
     </div>
+</div>
 
-    <div class="row">
-        <?php if (empty($actuators)): ?>
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <h5>Aucun actionneur configuré</h5>
-                    <p>Les actionneurs n'ont pas encore été ajoutés.</p>
-                </div>
-            </div>
-        <?php else: ?>
-            <?php foreach ($actuators as $actuator): ?>
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h6 class="card-title mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
-                            </div>
-                            
-                            <div class="d-flex align-items-center mb-2">
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Vous pouvez visualiser l'état de tous les actionneurs et contrôler ceux connectés à votre système (Bouton et Moteur).
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <?php if (empty($actuators)): ?>
+        <div class="col-12">
+            <div class="alert alert-warning"><h5>Aucun actionneur disponible sur le réseau.</h5></div>
+        </div>
+    <?php else: ?>
+        <?php foreach ($actuators as $actuator): ?>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
+                        <span class="badge bg-secondary"><?= htmlspecialchars($actuator['type']) ?></span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="me-3 fs-2">
                                 <?php
-                                $icon = '';
-                                switch ($actuator['type']) {
-                                    case 'irrigation': $icon = '💧'; break;
-                                    case 'ventilation': $icon = '🌪️'; break;
-                                    case 'heating': $icon = '🔥'; break;
-                                    case 'lighting': $icon = '💡'; break;
-                                    case 'window': $icon = '🪟'; break;
-                                    default: $icon = '⚡';
-                                }
+                                // Define icons for different actuator types
+                                $icons = [
+                                    'button' => '🔘', 
+                                    'motor' => '⚙️', 
+                                    'irrigation' => '💧', 
+                                    'ventilation' => '🌪️', 
+                                    'heating' => '🔥', 
+                                    'lighting' => '💡', 
+                                    'window' => '🪟'
+                                ];
+                                echo $icons[$actuator['type']] ?? '⚡';
                                 ?>
-                                <span class="me-2"><?= $icon ?></span>
-                                <span><?= ucfirst($actuator['type']) ?></span>
+                            </span>
+                            <div>
+                                <h6 class="mb-0"><?= ucfirst($actuator['type']) ?></h6>
+                                <small class="text-muted">Actionneur #<?= $actuator['id'] ?></small>
                             </div>
-                            
-                            <div class="d-flex align-items-center justify-content-between">
+                        </div>
+                        
+                        <div class="mt-auto">
+                             <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="text-muted">État :</span>
                                 <div class="d-flex align-items-center">
                                     <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2"></span>
-                                    <span class="text-muted">
-                                        <?= $actuator['current_state'] ? 'Actif' : 'Inactif' ?>
-                                    </span>
+                                    <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>">
+                                        <?= $actuator['current_state'] ? 'ACTIF' : 'INACTIF' ?>
+                                    </strong>
                                 </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <?php
+                                // --- LOGIC TO DISPLAY THE BUTTON BASED ON TYPE ---
+                                // Define which actuator types are controllable by this instance
+                                $controllable_types = ['button', 'motor'];
+
+                                if (in_array($actuator['type'], $controllable_types)):
+                                ?>
+                                    <button 
+                                        class="btn <?= $actuator['current_state'] ? 'btn-danger' : 'btn-success' ?>"
+                                        onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['current_state'] ? 'OFF' : 'ON' ?>')"
+                                        <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
+                                        <i class="bi bi-<?= $actuator['current_state'] ? 'stop-circle' : 'play-circle' ?>"></i> 
+                                        <?= $actuator['current_state'] ? 'Arrêter' : 'Démarrer' ?>
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="bi bi-eye-fill"></i> Lecture Seule
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-<?php else: ?>
-    <!-- Message pour les utilisateurs non-admin -->
-    <div class="row mb-4 mt-5">
-        <div class="col-12">
-            <div class="alert alert-info">
-                <div class="d-flex align-items-center">
-                    <span class="me-3">🔒</span>
-                    <div>
-                        <h5 class="mb-1">Accès Restreint</h5>
-                        <p class="mb-0">
-                            La gestion des actionneurs est réservée aux administrateurs. 
-                            Vous pouvez consulter les données des capteurs et surveiller l'état de votre serre.
-                        </p>
-                    </div>
-                </div>
             </div>
-        </div>
-    </div>
-<?php endif; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
 
 <!-- Informations éco-responsables -->
 <div class="row mt-4">
