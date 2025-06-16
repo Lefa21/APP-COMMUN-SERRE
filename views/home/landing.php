@@ -590,7 +590,6 @@
                             <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-2"></i>Réduction de 95% de la consommation d'eau</li>
                             <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-2"></i>Agriculture 100% sans pesticides</li>
                             <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-2"></i>Interface web éco-conçue</li>
-                            <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-2"></i>Algorithmes d'IA pour minimiser le gaspillage</li>
                         </ul>
                     </div>
                 </div>
