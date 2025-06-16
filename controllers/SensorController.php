@@ -122,7 +122,7 @@ class SensorController extends BaseController {
         $unit = trim($_POST['unit'] ?? '');
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         // La fonction updateSensor existe, c'est correct
-        if ($this->sensorModel->updateSensor($id, $name, $type, $unit, $isActive)) {
+        if ($this->sensorModel->update($id, $name, $type, $unit, $isActive)) {
             $this->setMessage('Capteur modifié avec succès', 'success');
         } else {
             $this->setMessage('Erreur', 'error');

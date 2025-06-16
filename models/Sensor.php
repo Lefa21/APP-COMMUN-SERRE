@@ -34,15 +34,6 @@ class Sensor {
         return $stmt->execute([$name, $type, $unit]);
     }
     
-    public function updateSensor($id, $name, $type, $unit, $isActive) {
-        $stmt = $this->db->prepare("
-            UPDATE capteurs 
-            SET nom = ?, type = ?, unite = ?, is_active = ? 
-            WHERE id = ?
-        ");
-        return $stmt->execute([$name, $type, $unit, $isActive, $id]);
-    }
-    
     public function deleteSensor($id) {
         // Supprimer d'abord les données associées
         $stmt = $this->db->prepare("DELETE FROM mesures WHERE capteur_id = ?");
@@ -97,78 +88,124 @@ class Sensor {
     }
     
     
-    /**
- * Récupère les alertes actives basées sur des seuils prédéfinis.
- * @return array
- */
-public function getAlerts() {
-    $sql = "
-        SELECT 
-            c.id, 
-            c.nom as name, 
-            c.type, 
-            c.unite as unit,
-            m.valeur as value, 
-            m.date_heure as timestamp,
-            CASE 
-                WHEN c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35) THEN 'critical'
-                WHEN c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90) THEN 'warning'
-                WHEN c.type = 'soil_moisture' AND m.valeur < 25 THEN 'critical'
-                ELSE 'normal'
-            END as alert_level
-        FROM capteurs c
-        -- On joint uniquement la dernière mesure de chaque capteur
-        JOIN mesures m ON m.id = (
-            SELECT id FROM mesures sub_m
-            WHERE sub_m.capteur_id = c.id
-            ORDER BY date_heure DESC
-            LIMIT 1
-        )
-        -- On filtre ensuite sur les conditions d'alerte
-        WHERE c.is_active = 1
-        AND m.date_heure >= DATE_SUB(NOW(), INTERVAL 1 HOUR) -- Uniquement les alertes récentes
-        AND (
-            (c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35)) OR
-            (c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90)) OR
-            (c.type = 'soil_moisture' AND m.valeur < 25)
-        )
-    ";
-    
-    $stmt = $this->db->query($sql);
-    return $stmt->fetchAll();
-}
+   /**
+     * Récupère les alertes actives pour les capteurs qui sont actuellement
+     * contrôlés par un actionneur en marche (état = 1).
+     * @return array
+     */
+    public function getAlerts() {
+        $sql = "
+            SELECT 
+                c.id, 
+                c.nom as name, 
+                c.type, 
+                c.unite as unit,
+                m.valeur as value, 
+                m.date_heure as timestamp,
+                -- Définition des niveaux d'alerte basés sur les seuils
+                CASE 
+                    WHEN c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35) THEN 'critical'
+                    WHEN c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90) THEN 'warning'
+                    WHEN c.type = 'soil_moisture' AND m.valeur < 25 THEN 'critical'
+                    ELSE 'normal'
+                END as alert_level
+            FROM capteurs c
+            -- On joint la dernière mesure de chaque capteur pour avoir la valeur la plus récente
+            JOIN mesures m ON m.id = (
+                SELECT id FROM mesures sub_m
+                WHERE sub_m.capteur_id = c.id
+                ORDER BY date_heure DESC
+                LIMIT 1
+            )
+            -- Condition principale : on ne vérifie que les capteurs dont l'actionneur lié est actif (état = 1)
+            WHERE 
+                -- Cette sous-requête vérifie l'état de l'actionneur lié
+                (SELECT e.etat 
+                 FROM etats_actionneurs e 
+                 WHERE e.actionneur_id = c.linked_actuator_id
+                 ORDER BY e.date_heure DESC 
+                 LIMIT 1) = 1
+            -- Et que la dernière mesure soit récente (moins d'une heure)
+            AND m.date_heure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+            -- Et que la valeur dépasse un des seuils d'alerte
+            AND (
+                (c.type = 'temperature' AND (m.valeur < 15 OR m.valeur > 35)) OR
+                (c.type = 'humidity' AND (m.valeur < 30 OR m.valeur > 90)) OR
+                (c.type = 'soil_moisture' AND m.valeur < 25)
+            )
+        ";
+        
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll();
+    }
 
 
+   /**
+     * Récupère tous les capteurs avec leur état dynamique calculé.
+     * L'état "is_active" est déterminé par l'état de l'actionneur lié.
+     * @return array
+     */
     public function getAllSensors() {
+        // Cette requête utilise une sous-requête pour trouver l'état le plus récent
+        // de l'actionneur lié à chaque capteur.
         $stmt = $this->db->query("
-            SELECT id, nom as name, type, unite as unit, is_active
-            FROM capteurs
-            ORDER BY nom
+            SELECT 
+                c.id, 
+                c.nom as name, 
+                c.type, 
+                c.unite as unit,
+                c.linked_actuator_id,
+                -- Calcul dynamique de l'état du capteur.
+                -- COALESCE renvoie 0 si la sous-requête ne trouve rien (pas d'actionneur lié ou pas d'état).
+                COALESCE((SELECT e.etat 
+                          FROM etats_actionneurs e 
+                          WHERE e.actionneur_id = c.linked_actuator_id
+                          ORDER BY e.date_heure DESC 
+                          LIMIT 1), 0) as is_active
+            FROM capteurs c
+            ORDER BY c.nom
         ");
+        
         return $stmt->fetchAll();
     }
 
     /**
-     * Récupère tous les capteurs actifs avec leur dernière lecture.
+     * Récupère tous les capteurs avec leur état dynamique et leur dernière lecture.
+     * L'état "is_active" est maintenant calculé en fonction de l'état de l'actionneur lié.
      * @return array
      */
     public function getAllSensorsWithLastReading() {
         $stmt = $this->db->query("
             SELECT 
-                c.id, c.nom as name, c.type, c.unite as unit, 
-                m.valeur as value, m.date_heure as timestamp
+                c.id, 
+                c.nom as name, 
+                c.type, 
+                c.unite as unit,
+                -- Lecture de la dernière valeur du capteur
+                (SELECT m.valeur FROM mesures m WHERE m.capteur_id = c.id ORDER BY m.date_heure DESC LIMIT 1) as value,
+                -- Lecture de la date de la dernière valeur
+                (SELECT m.date_heure FROM mesures m WHERE m.capteur_id = c.id ORDER BY m.date_heure DESC LIMIT 1) as timestamp,
+                -- Calcul dynamique de l'état du capteur
+                (SELECT e.etat 
+                 FROM etats_actionneurs e 
+                 WHERE e.actionneur_id = c.linked_actuator_id -- On utilise la nouvelle colonne de liaison
+                 ORDER BY e.date_heure DESC 
+                 LIMIT 1
+                ) as is_active -- On garde le nom 'is_active' pour que les vues n'aient pas à changer
             FROM capteurs c
-            LEFT JOIN mesures m ON m.id = (
-                SELECT id FROM mesures
-                WHERE capteur_id = c.id
-                ORDER BY date_heure DESC
-                LIMIT 1
-            )
-            WHERE c.is_active = 1
             ORDER BY c.nom
         ");
-        return $stmt->fetchAll();
+        
+        $sensors = $stmt->fetchAll();
+
+        // S'assurer que les valeurs par défaut sont correctes (0 ou false si aucune donnée)
+        foreach ($sensors as &$sensor) {
+            $sensor['is_active'] = $sensor['is_active'] ?? 0;
+        }
+
+        return $sensors;
     }
+
     
     /**
      * Crée un nouveau capteur.
@@ -179,17 +216,22 @@ public function getAlerts() {
         return $stmt->execute([$name, $type, $unit]);
     }
 
-    /**
-     * Met à jour un capteur existant.
+   /**
+     * Met à jour un capteur.
+     * La liaison à un actionneur (linked_actuator_id) n'est plus modifiable ici.
+     * * @param int $id
+     * @param string $name
+     * @param string $type
+     * @param string $unit
      * @return bool
      */
-    public function update($id, $name, $type, $unit, $isActive) {
+    public function update($id, $name, $type, $unit) {
         $stmt = $this->db->prepare("
             UPDATE capteurs 
-            SET nom = ?, type = ?, unite = ?, is_active = ? 
+            SET nom = ?, type = ?, unite = ?
             WHERE id = ?
         ");
-        return $stmt->execute([$name, $type, $unit, $isActive, $id]);
+        return $stmt->execute([$name, $type, $unit, $id]);
     }
 
     /**
@@ -269,12 +311,26 @@ public function getAlerts() {
         return $stmt->fetchAll();
     }
 
-    /**
-     * Compte le nombre de capteurs actifs.
+/**
+     * Compte le nombre de capteurs actuellement actifs.
+     * Un capteur est considéré comme actif si son actionneur lié a un état de 1 (ON).
      * @return int
      */
     public function countActive() {
-        return (int) $this->db->query("SELECT COUNT(*) FROM capteurs WHERE is_active = 1")->fetchColumn();
+        // Cette requête compte les capteurs pour lesquels la sous-requête (qui récupère l'état
+        // de l'actionneur lié) retourne 1.
+        $stmt = $this->db->query("
+            SELECT COUNT(*) 
+            FROM capteurs c 
+            WHERE 
+                (SELECT e.etat 
+                 FROM etats_actionneurs e 
+                 WHERE e.actionneur_id = c.linked_actuator_id 
+                 ORDER BY e.date_heure DESC 
+                 LIMIT 1) = 1
+        ");
+        
+        return (int) $stmt->fetchColumn();
     }
 
     /**

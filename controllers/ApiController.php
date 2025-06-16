@@ -51,7 +51,7 @@ class ApiController extends BaseController {
                 'success' => true,
                 'data' => $actuators,
                 'timestamp' => date('Y-m-d H:i:s'),
-                'active_count' => count(array_filter($actuators, fn($a) => $a['current_state'])),
+                'active_count' => count(array_filter($actuators, fn($a) => $a['etat'])),
                 'total_count' => count($actuators)
             ]);
         } catch (Exception $e) {

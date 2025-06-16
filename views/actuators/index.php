@@ -102,9 +102,9 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <span class="text-muted">État actuel:</span>
                                 <div class="d-flex align-items-center">
-                                    <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2"></span>
-                                    <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>">
-                                        <?= $actuator['current_state'] ? 'ACTIF' : 'INACTIF' ?>
+                                    <span class="status-indicator <?= $actuator['etat'] ? 'status-on' : 'status-off' ?> me-2"></span>
+                                    <strong class="<?= $actuator['etat'] ? 'text-success' : 'text-secondary' ?>">
+                                        <?= $actuator['etat'] ? 'ACTIF' : 'INACTIF' ?>
                                     </strong>
                                 </div>
                             </div>
@@ -120,12 +120,12 @@
                         <!-- Contrôles -->
                         <div class="d-grid gap-2">
                             <?php if ($isAdmin): ?>
-                                <?php if ($actuator['current_state']): ?>
+                                <?php if ($actuator['etat']): ?>
                                     <button 
                                         class="btn btn-danger"
                                         data-actuator-id="<?= $actuator['id'] ?>"
                                         onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')"
-                                        <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
+                                        <?= !$actuator['etat'] ? 'disabled' : '' ?>>
                                         <i class="bi bi-stop-circle"></i> Arrêter
                                     </button>
                                 <?php else: ?>
@@ -133,7 +133,7 @@
                                         class="btn btn-success"
                                         data-actuator-id="<?= $actuator['id'] ?>"
                                         onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')"
-                                        <?= !$actuator['is_active'] ? 'disabled' : '' ?>>
+                                        <?= !$actuator['etat'] ? 'disabled' : '' ?>>
                                         <i class="bi bi-play-circle"></i> Démarrer
                                     </button>
                                 <?php endif; ?>
@@ -153,7 +153,7 @@
                             <?php endif; ?>
                         </div>
                         
-                        <?php if (!$actuator['is_active']): ?>
+                        <?php if (!$actuator['etat']): ?>
                             <div class="mt-2">
                                 <small class="text-warning">
                                     <i class="bi bi-exclamation-triangle"></i> Actionneur désactivé

@@ -195,11 +195,6 @@
                                                     <span class="badge bg-<?= $activity['action'] === 'ON' ? 'success' : 'secondary' ?>">
                                                         <?= $activity['action'] ?>
                                                     </span>
-                                                    <?php if (!empty($activity['team_name'])): ?>
-                                                        <span class="badge bg-info ms-1">
-                                                            <?= htmlspecialchars($activity['team_name']) ?>
-                                                        </span>
-                                                    <?php endif; ?>
                                                 </p>
                                                 <small class="text-muted">
                                                     <i class="bi bi-clock"></i>

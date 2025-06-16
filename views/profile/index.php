@@ -129,9 +129,6 @@
                 
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <small class="text-muted">Équipe:</small>
-                    <span class="badge bg-info">
-                        <?= htmlspecialchars($user['team_name'] ?? 'Aucune') ?>
-                    </span>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center">

@@ -100,9 +100,7 @@
                                 <th>Nom</th>
                                 <th>Type</th>
                                 <th>Unité</th>
-                                <th>Équipe</th>
                                 <th>Statut</th>
-                                <th>Dernière donnée</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -137,11 +135,6 @@
                                         <span class="badge bg-<?= $sensor['is_active'] ? 'success' : 'secondary' ?>">
                                             <?= $sensor['is_active'] ? 'Actif' : 'Inactif' ?>
                                         </span>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">
-                                            <?= isset($sensor['last_reading']) ? date('d/m H:i', strtotime($sensor['last_reading'])) : 'Jamais' ?>
-                                        </small>
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">

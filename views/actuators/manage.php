@@ -94,7 +94,7 @@
                 <div class="row text-center">
                     <div class="col-6">
                         <h4 class="text-success" id="activeCount">
-                            <?= count(array_filter($actuators, function($a) { return $a['current_state']; })) ?>
+                            <?= count(array_filter($actuators, function($a) { return $a['etat']; })) ?>
                         </h4>
                         <small>Actifs</small>
                     </div>
@@ -133,7 +133,7 @@
         <?php foreach ($actuators as $actuator): ?>
             <div class="col-lg-4 col-md-6 mb-4 actuator-card" 
                  data-type="<?= $actuator['type'] ?>" 
-                 data-state="<?= $actuator['current_state'] ?>">
+                 data-state="<?= $actuator['etat'] ?>">
                 <div class="card h-100 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
@@ -183,9 +183,9 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <span class="text-muted">État actuel:</span>
                                 <div class="d-flex align-items-center">
-                                    <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2" id="status-<?= $actuator['id'] ?>"></span>
-                                    <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>" id="state-text-<?= $actuator['id'] ?>">
-                                        <?= $actuator['current_state'] ? 'ACTIF' : 'INACTIF' ?>
+                                    <span class="status-indicator <?= $actuator['etat'] ? 'status-on' : 'status-off' ?> me-2" id="status-<?= $actuator['id'] ?>"></span>
+                                    <strong class="<?= $actuator['etat'] ? 'text-success' : 'text-secondary' ?>" id="state-text-<?= $actuator['id'] ?>">
+                                        <?= $actuator['etat'] ? 'ACTIF' : 'INACTIF' ?>
                                     </strong>
                                 </div>
                             </div>
@@ -197,8 +197,43 @@
                                 ID: #<?= $actuator['id'] ?>
                             </small>
                         </div>
-                        
-                        <?php if (!$actuator['is_active']): ?>
+
+                          <!-- Contrôles -->
+                        <div class="d-grid gap-2">
+                            <?php if ($actuator['etat']): ?>
+                                <button 
+                                    class="btn btn-danger"
+                                    id="toggle-btn-<?= $actuator['id'] ?>"
+                                    data-actuator-id="<?= $actuator['id'] ?>"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')"
+                                    <?= !$actuator['etat'] ? 'disabled' : '' ?>>
+                                    <i class="bi bi-stop-circle"></i> Arrêter
+                                </button>
+                            <?php else: ?>
+                                <button 
+                                    class="btn btn-success"
+                                    id="toggle-btn-<?= $actuator['id'] ?>"
+                                    data-actuator-id="<?= $actuator['id'] ?>"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')"
+                                    <?= !$actuator['etat'] ? 'disabled' : '' ?>>
+                                    <i class="bi bi-play-circle"></i> Démarrer
+                                </button>
+                            <?php endif; ?>
+                            
+                            <!-- Boutons de gestion -->
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-warning btn-sm" 
+                                        onclick="editActuator(<?= $actuator['id'] ?>)" title="Modifier">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="deleteActuator(<?= $actuator['id'] ?>, '<?= htmlspecialchars($actuator['name']) ?>')" title="Supprimer">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+
+                        <?php if (!$actuator['etat']): ?>
                             <div class="mt-2">
                                 <small class="text-warning">
                                     <i class="bi bi-exclamation-triangle"></i> Actionneur désactivé
@@ -235,8 +270,6 @@
                                 <th>ID</th>
                                 <th>Nom</th>
                                 <th>Type</th>
-                                <th>Équipe</th>
-                                <th>État</th>
                                 <th>Statut</th>
                                 <th>Dernière action</th>
                             </tr>
@@ -268,19 +301,8 @@
                                         </span>
                                     </td>
                                     <td>
-        
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="status-indicator <?= $actuator['current_state'] ? 'status-on' : 'status-off' ?> me-2"></span>
-                                            <strong class="<?= $actuator['current_state'] ? 'text-success' : 'text-secondary' ?>">
-                                                <?= $actuator['current_state'] ? 'ON' : 'OFF' ?>
-                                            </strong>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-<?= $actuator['is_active'] ? 'success' : 'secondary' ?>">
-                                            <?= $actuator['is_active'] ? 'Actif' : 'Inactif' ?>
+                                        <span class="badge bg-<?= $actuator['etat'] ? 'success' : 'secondary' ?>">
+                                            <?= $actuator['etat'] ? 'Actif' : 'Inactif' ?>
                                         </span>
                                     </td>
                                     <td>
@@ -424,7 +446,7 @@
                     
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="editActuatorActive" name="is_active">
+                            <input class="form-check-input" type="checkbox" id="editActuatorActive" name="etat">
                             <label class="form-check-label" for="editActuatorActive">
                                 Actionneur actif
                             </label>
@@ -466,8 +488,8 @@
                         <h6>📈 Statistiques</h6>
                         <ul class="list-unstyled">
                             <li>🔧 Actionneurs configurés: <strong><?= count($actuators) ?></strong></li>
-                            <li>✅ Actionneurs actifs: <strong><?= count(array_filter($actuators, function($a) { return $a['is_active']; })) ?></strong></li>
-                            <li>⚡ Actionneurs en marche: <strong id="runningCount"><?= count(array_filter($actuators, function($a) { return $a['current_state']; })) ?></strong></li>
+                            <li>✅ Actionneurs actifs: <strong><?= count(array_filter($actuators, function($a) { return $a['etat']; })) ?></strong></li>
+                            <li>⚡ Actionneurs en marche: <strong id="runningCount"><?= count(array_filter($actuators, function($a) { return $a['etat']; })) ?></strong></li>
                         </ul>
                     </div>
                     <div class="col-md-6">
@@ -526,7 +548,7 @@ function editActuator(actuatorId) {
     
     document.getElementById('editActuatorId').value = actuator.id;
     document.getElementById('editActuatorName').value = actuator.name;
-    document.getElementById('editActuatorActive').checked = actuator.is_active == 1;
+    document.getElementById('editActuatorActive').checked = actuator.etat == 1;
     
     new bootstrap.Modal(document.getElementById('editActuatorModal')).show();
 }
@@ -551,7 +573,7 @@ function toggleAllActuators(action) {
         return;
     }
     
-    const activeActuators = actuatorsData.filter(a => a.is_active && a.current_state);
+    const activeActuators = actuatorsData.filter(a => a.etat && a.etat);
     let completed = 0;
     
     activeActuators.forEach(actuator => {
