@@ -185,7 +185,6 @@
                                 <th>Statut</th>
                                 <th>Activité</th>
                                 <th>Inscription</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
