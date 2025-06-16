@@ -15,11 +15,9 @@
         <div class="d-flex justify-content-between align-items-center">
             <h1>🔧 Gestion des Capteurs</h1>
             <div class="btn-group">
+                    <a href="<?= BASE_URL ?>?controller=sensor" class="btn btn-outline-primary btn-sm">Voir les détails des capteurs</a>
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSensorModal">
                     <i class="bi bi-plus-circle"></i> Ajouter un capteur
-                </button>
-                <button class="btn btn-info" onclick="simulateAllSensors()">
-                    <i class="bi bi-lightning"></i> Simuler données
                 </button>
             </div>
         </div>
@@ -56,6 +54,7 @@
                             <option value="">Tous les types</option>
                             <option value="temperature">Température</option>
                             <option value="humidite">Humidité</option>
+                             <option value="humidite_sol">Humidité du sol</option>
                             <option value="luminosite">Luminosité</option>
                         </select>
                     </div>
@@ -93,8 +92,7 @@
                     <table class="table table-hover" id="sensorsTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nom</th>
+                                <th>type</th>
                                 <th>Unité</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
@@ -106,7 +104,6 @@
                                     data-type="<?= $sensor['name'] ?>" 
                                     data-status="<?= $sensor['is_active'] ?>"
                                     class="sensor-row">
-                                    <td><strong>#<?= $sensor['id'] ?></strong></td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <?php
@@ -115,8 +112,8 @@
                                                 case 'temperature': $icon = '🌡️'; break;
                                                 case 'humidite': $icon = '💧'; break;
                                                 case 'luminosite': $icon = '☀️'; break;
-                                                /*
-                                                case 'soil_moisture': $icon = '🌱'; break;
+                                                case 'humidite_sol': $icon = '🌱'; break;
+                                                  /*
                                                 case 'ph': $icon = '🧪'; break;
                                                 case 'co2': $icon = '🌬️'; break;
                                                 */
@@ -142,10 +139,6 @@
                                             <button class="btn btn-outline-warning btn-sm" 
                                                     onclick="editSensor(<?= $sensor['id'] ?>)" title="Modifier">
                                                 <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-info btn-sm" 
-                                                    onclick="simulateSensor(<?= $sensor['id'] ?>)" title="Simuler">
-                                                <i class="bi bi-lightning"></i>
                                             </button>
                                             <button class="btn btn-outline-danger btn-sm" 
                                                     onclick="deleteSensor(<?= $sensor['id'] ?>, '<?= htmlspecialchars($sensor['name']) ?>')" title="Supprimer">
@@ -186,7 +179,7 @@
                 <input type="hidden" name="management_action" value="add">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="sensorName" class="form-label">Nom du capteur *</label>
+                        <label for="sensorName" class="form-label">Type du capteur *</label>
                         <input type="text" class="form-control" id="sensorName" name="name" required 
                                placeholder="Ex: Température Serre A">
                     </div>
@@ -194,11 +187,12 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="sensorType" class="form-label">Nom *</label>
+                                <label for="sensorType" class="form-label">Type *</label>
                                 <select class="form-select" id="sensorType" name="type" required>
-                                    <option value="">Choisir un nom</option>
+                                    <option value="">Choisir un type</option>
                                     <option value="temperature">🌡️ Température</option>
                                     <option value="humidite">💧 Humidité</option>
+                                    <option value="humidite_sol">💧 Humidité du sol</option>
                                     <option value="luminosite">☀️ Luminosité</option>
                                 </select>
                             </div>
@@ -236,7 +230,7 @@
                 <input type="hidden" name="sensor_id" id="editSensorId">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="editSensorName" class="form-label">Nom du capteur *</label>
+                        <label for="editSensorName" class="form-label">Type du capteur *</label>
                         <input type="text" class="form-control" id="editSensorName" name="name" required>
                     </div>
                     
@@ -262,51 +256,6 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-warning">
                         <i class="bi bi-pencil"></i> Modifier
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Simulation en lot -->
-<div class="modal fade" id="batchSimulateModal" tabindex="-1" aria-labelledby="batchSimulateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="batchSimulateModalLabel">⚡ Simulation en lot</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST">
-                <input type="hidden" name="management_action" value="simulate_batch">
-                <div class="modal-body">
-                    <p>Générer des données de test pour plusieurs capteurs :</p>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Capteurs à simuler :</label>
-                        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                            <?php foreach ($sensors as $sensor): ?>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="sensor_ids[]" 
-                                           value="<?= $sensor['id'] ?>" id="batch_<?= $sensor['id'] ?>">
-                                    <label class="form-check-label" for="batch_<?= $sensor['id'] ?>">
-                                        <?= htmlspecialchars($sensor['name']) ?> (<?= $sensor['type'] ?>)
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="batchCount" class="form-label">Nombre de mesures par capteur :</label>
-                        <input type="number" class="form-control" id="batchCount" name="batch_count" 
-                               value="10" min="1" max="100">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-info">
-                        <i class="bi bi-lightning"></i> Générer les données
                     </button>
                 </div>
             </form>
@@ -402,10 +351,11 @@ document.getElementById('sensorType').addEventListener('change', function() {
         'temperature': '°C',
         'humidite': '%',
         'luminosite': 'lux',
+        'humidite_sol': '%',
+
         /*
         'ph': 'pH',
         'co2': 'ppm'
-        'soil_moisture': '%',
         */
     };
     

@@ -205,4 +205,73 @@ class ApiController extends BaseController {
         }
         return $chartData;
     }
+
+/**
+     * Reçoit l'état des capteurs depuis le script Python, les enregistre,
+     * et applique la logique d'automatisation pour le moteur.
+     */
+    public function syncSensors() {
+        // Sécurité
+        $apiKey = $_POST['api_key'] ?? '';
+        if (!$this->validateApiKey($apiKey)) {
+            $this->jsonResponse(['error' => 'Clé API invalide'], 401);
+        }
+
+        // Récupération des données
+        $button_sensor_id = (int)($_POST['button_sensor_id'] ?? 0);
+        $button_state = (int)($_POST['button_state'] ?? 0);
+        $humidity_sensor_id = (int)($_POST['humidity_sensor_id'] ?? 0);
+        $humidity_value = (float)($_POST['humidity_value'] ?? 0.0);
+        
+        // IMPORTANT: L'ID de votre moteur doit être connu ici.
+        // Idéalement, il serait récupéré via une configuration.
+        $motor_actuator_id = 2; // ID du moteur dans votre BDD
+
+        if (!$button_sensor_id || !$humidity_sensor_id || !$motor_actuator_id) {
+             $this->jsonResponse(['error' => 'Données de configuration manquantes.'], 400);
+        }
+
+        try {
+            // 1. Enregistrer les valeurs des capteurs
+            $this->sensorModel->addSensorData($button_sensor_id, $button_state);
+            $this->sensorModel->addSensorData($humidity_sensor_id, $humidity_value);
+            
+            // 2. LOGIQUE MÉTIER : Commander le moteur en fonction de l'état du bouton
+            $action_to_perform = ($button_state == 1) ? 'ON' : 'OFF';
+            
+            // On met à jour l'état du moteur dans la base de données
+            $this->actuatorModel->toggleState($motor_actuator_id, $action_to_perform, 'system');
+            
+            $this->jsonResponse(['success' => true, 'message' => 'État synchronisé.']);
+
+        } catch (Exception $e) {
+            error_log("API hardwareSync Error: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur serveur.'], 500);
+        }
+    }
+
+    /**
+     * Reçoit une commande manuelle depuis le site web et l'envoie au matériel.
+     */
+    public function sendCommand() {
+        $this->requireLogin();
+        
+        $actuatorId = (int)($_POST['actuator_id'] ?? 0);
+        $action = strtoupper($_POST['action'] ?? '');
+        
+        if (!$actuatorId || !in_array($action, ['ON', 'OFF'])) {
+            $this->jsonResponse(['error' => 'Paramètres invalides'], 400);
+        }
+
+        // 1. Mettre à jour l'état dans la base de données
+        $this->actuatorModel->toggleState($actuatorId, $action, $_SESSION['user_id']);
+        
+        // 2. Écrire la commande dans le fichier pour le script Python
+        $commandFilePath = BASE_PATH . '/scripts/command.txt';
+        if (file_put_contents($commandFilePath, $action) === false) {
+            $this->jsonResponse(['error' => 'Erreur de communication avec le matériel.'], 500);
+        }
+        
+        $this->jsonResponse(['success' => true, 'message' => "Commande '{$action}' envoyée."]);
+    }
 }

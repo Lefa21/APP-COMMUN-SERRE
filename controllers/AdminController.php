@@ -112,6 +112,93 @@ class AdminController extends BaseController {
         $this->redirectBeforeRender('?controller=admin&action=users');
     }
 
+        public function exportUsers() {
+        $this->requireAdmin();
+
+        $format = strtolower($_GET['format'] ?? 'csv');
+        $users = $this->userModel->findAllWithProfiles();
+
+        if ($format === 'json') {
+            $this->exportUsersToJson($users);
+        } else {
+            $this->exportUsersToCsv($users);
+        }
+    }
+
+    /**
+     * Méthode privée pour générer un fichier CSV avec la liste des utilisateurs.
+     * @param array $users
+     */
+    private function exportUsersToCsv($users) {
+        $filename = "export_utilisateurs_" . date('Y-m-d') . ".csv";
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+
+        // Écriture de la ligne d'en-tête
+        fputcsv($output, [
+            'ID', 
+            'Nom d\'utilisateur', 
+            'Email', 
+            'Prénom', 
+            'Nom', 
+            'Rôle', 
+            'Statut'
+        ]);
+
+        // Écriture des données pour chaque utilisateur
+        foreach ($users as $user) {
+            fputcsv($output, [
+                $user['id_user'],
+                $user['username'],
+                $user['email'],
+                $user['first_name'],
+                $user['last_name'],
+                $user['role_name'],
+                ($user['is_active'] ?? 1) ? 'Actif' : 'Inactif'
+            ]);
+        }
+
+        fclose($output);
+        exit();
+    }
+
+    /**
+     * Méthode privée pour générer un fichier JSON avec la liste des utilisateurs.
+     * @param array $users
+     */
+    private function exportUsersToJson($users) {
+        $filename = "export_utilisateurs_" . date('Y-m-d') . ".json";
+
+        // Préparation de la structure des données pour l'export
+        $exportData = [
+            'export_date' => date('c'), // Format ISO 8601
+            'user_count' => count($users),
+            'users' => []
+        ];
+
+        foreach ($users as $user) {
+            // On ne sélectionne que les données pertinentes pour l'export
+            $exportData['users'][] = [
+                'id' => $user['id_user'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'],
+                'role' => $user['role_name'],
+                'status' => ($user['is_active'] ?? 1) ? 'Actif' : 'Inactif'
+            ];
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        echo json_encode($exportData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     // --- Méthodes privées du contrôleur (logique applicative) ---
 
 private function createUser() {

@@ -62,12 +62,11 @@ class Sensor {
                 $baseValue = 60;
                 $variation = 20;
                 break;
-                /*
-            case 'soil_moisture':
+                
+            case 'humidite_sol':
                 $baseValue = 45;
                 $variation = 15;
                 break;
-                */
             case 'luminosite':
                 $baseValue = 800;
                 $variation = 200;
@@ -110,8 +109,8 @@ class Sensor {
                 m.date_heure as timestamp,
                 -- Définition des niveaux d'alerte basés sur les seuils
                 CASE 
-                    WHEN name = 'temperature' AND (m.valeur < 15 OR m.valeur > 35) THEN 'critical'
-                    WHEN name = 'humidite' AND (m.valeur < 30 OR m.valeur > 90) THEN 'warning'
+                    WHEN nom = 'temperature' AND (m.valeur < 15 OR m.valeur > 35) THEN 'critical'
+                    WHEN nom = 'humidite' AND (m.valeur < 30 OR m.valeur > 90) THEN 'warning'
                     ELSE 'normal'
                 END as alert_level
             FROM capteurs c
@@ -128,9 +127,9 @@ class Sensor {
             AND m.date_heure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
             -- Et que la valeur dépasse un des seuils d'alerte
             AND (
-                (c.name = 'temperature' AND (m.valeur < 15 OR m.valeur > 35)) OR
-                (c.name = 'humidite' AND (m.valeur < 30 OR m.valeur > 90)) OR
-                (c.name = 'luminosite' AND m.valeur < 25)
+                (c.nom = 'temperature' AND (m.valeur < 15 OR m.valeur > 35)) OR
+                (c.nom = 'humidite' AND (m.valeur < 30 OR m.valeur > 90)) OR
+                (c.nom = 'luminosite' AND m.valeur < 25)
             )
         ";
         

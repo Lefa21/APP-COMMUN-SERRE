@@ -22,7 +22,7 @@
                     <?php if ($isAdmin): ?>
                         En tant qu'administrateur, vous pouvez contrôler tous les actionneurs de toutes les équipes.
                     <?php else: ?>
-                        Vous pouvez contrôler uniquement les actionneurs de votre équipe. 
+                        Vous pouvez contrôler uniquement les actionneurs de votre équipe.
                         Contactez un administrateur pour modifier la configuration.
                     <?php endif; ?>
                 </div>
@@ -39,12 +39,12 @@
                 <h5>Aucun actionneur disponible</h5>
                 <p>
                     <?php if ($isAdmin): ?>
-                        Aucun actionneur n'a été configuré. 
+                        Aucun actionneur n'a été configuré.
                         <a href="<?= BASE_URL ?>?controller=actuator&action=manage" class="alert-link">
                             Ajoutez-en un depuis l'interface d'administration
                         </a>.
                     <?php else: ?>
-                        Aucun actionneur n'est disponible pour votre équipe. 
+                        Aucun actionneur n'est disponible pour votre équipe.
                         Contactez un administrateur pour en configurer.
                     <?php endif; ?>
                 </p>
@@ -57,19 +57,24 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
                     </div>
-                    
+
                     <div class="card-body">
                         <!-- Type et icône -->
                         <div class="d-flex align-items-center mb-3">
                             <?php
                             $icon = '';
                             $description = '';
-                            switch ($actuator['type']) {
-                                case 'irrigation': 
-                                    $icon = '💧'; 
+                            switch ($actuator['name']) {
+                                case 'moteur':
+                                    $icon = '💧';
                                     $description = 'Système d\'arrosage automatique';
                                     break;
-                                case 'ventilation': 
+                                case 'led':
+                                    $icon = '💡';
+                                    $description = 'Éclairage artificiel';
+                                    break;
+                                /*
+                                case 'led': 
                                     $icon = '🌪️'; 
                                     $description = 'Ventilation et circulation d\'air';
                                     break;
@@ -77,14 +82,11 @@
                                     $icon = '🔥'; 
                                     $description = 'Système de chauffage';
                                     break;
-                                case 'lighting': 
-                                    $icon = '💡'; 
-                                    $description = 'Éclairage artificiel';
-                                    break;
                                 case 'window': 
                                     $icon = '🪟'; 
                                     $description = 'Ouverture/fermeture automatique';
                                     break;
+                                    */
                                 default:
                                     $icon = '⚡';
                                     $description = 'Actionneur générique';
@@ -92,11 +94,11 @@
                             ?>
                             <span class="me-3" style="font-size: 2rem;"><?= $icon ?></span>
                             <div>
-                                <h6 class="mb-0"><?= ucfirst($actuator['type']) ?></h6>
+                                <h6 class="mb-0"><?= ucfirst($actuator['name']) ?></h6>
                                 <small class="text-muted"><?= $description ?></small>
                             </div>
                         </div>
-                        
+
                         <!-- État actuel -->
                         <div class="mb-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -109,50 +111,40 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Informations techniques -->
-                        <div class="mb-3">
-                            <small class="text-muted d-block">
-                                ID: #<?= $actuator['id'] ?>
-                            </small>
-                        </div>
-                        
+
                         <!-- Contrôles -->
                         <div class="d-grid gap-2">
-                            <?php if ($isAdmin): ?>
-                                <?php if ($actuator['etat']): ?>
+                            <?php
+                            // On définit les types d'actionneurs que ce site peut contrôler manuellement.
+                            // Dans votre cas, ce sont le moteur et le bouton physique (qui est un type d'actionneur ici).
+                            $controllable_type = 'moteur';
+
+                            // On vérifie si le type de l'actionneur actuel est dans la liste des types contrôlables.
+                           if (isset($actuator['name']) && $actuator['name'] === $controllable_type):
+                                ?>
+                                    <!-- Si c'est votre moteur, afficher le bouton de contrôle ON/OFF -->
                                     <button 
-                                        class="btn btn-danger"
-                                        data-actuator-id="<?= $actuator['id'] ?>"
-                                        onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')"
-                                        <?= !$actuator['etat'] ? 'disabled' : '' ?>>
-                                        <i class="bi bi-stop-circle"></i> Arrêter
+                                        class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?>"
+                                        onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
+                                        <i class="bi bi-<?= $actuator['etat'] ? 'stop-circle-fill' : 'play-circle-fill' ?>"></i> 
+                                        <?= $actuator['etat'] ? 'Arrêter le Moteur' : 'Démarrer le Moteur' ?>
                                     </button>
+
                                 <?php else: ?>
-                                    <button 
-                                        class="btn btn-success"
-                                        data-actuator-id="<?= $actuator['id'] ?>"
-                                        onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')"
-                                        <?= !$actuator['etat'] ? 'disabled' : '' ?>>
-                                        <i class="bi bi-play-circle"></i> Démarrer
+                                    <!-- Pour tous les autres actionneurs (irrigation, ventilation, etc.), afficher un bouton désactivé -->
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="bi bi-eye-fill"></i> Lecture Seule
                                     </button>
                                 <?php endif; ?>
-                                
+
                                 <!-- Bouton simulation pour les tests -->
-                                <button 
-                                    class="btn btn-outline-info btn-sm"
-                                    onclick="simulateActuator(<?= $actuator['id'] ?>)">
-                                    <i class="bi bi-lightning"></i> Test Simulation
+                                <button
+                                    class="btn btn-outline-info btn-sm mt-2"
+                                    onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
+                                    <i class="bi bi-lightning"></i> Simuler une commande
                                 </button>
-                            <?php else: ?>
-                                <div class="alert alert-light text-center">
-                                    <small class="text-muted">
-                                        <i class="bi bi-lock"></i> Accès restreint à votre équipe
-                                    </small>
-                                </div>
-                            <?php endif; ?>
                         </div>
-                        
+
                         <?php if (!$actuator['etat']): ?>
                             <div class="mt-2">
                                 <small class="text-warning">
@@ -161,11 +153,11 @@
                             </div>
                         <?php endif; ?>
                     </div>
-                    
+
                     <!-- Footer avec dernière action -->
                     <div class="card-footer text-muted">
                         <small>
-                            <i class="bi bi-clock"></i> 
+                            <i class="bi bi-clock"></i>
                             Dernière modification: <span id="last-update-<?= $actuator['id'] ?>">Inconnue</span>
                         </small>
                     </div>
@@ -207,76 +199,108 @@
 </div>
 
 <script>
-// Fonction pour simuler un actionneur (utile pour les tests)
-function simulateActuator(actuatorId) {
-    // Alterner l'état pour la simulation
-    const button = document.querySelector(`[data-actuator-id="${actuatorId}"]`);
-    const currentAction = button.textContent.includes('Démarrer') ? 'ON' : 'OFF';
-    
-    if (confirm('Voulez-vous simuler l\'action sur cet actionneur ?')) {
-        toggleActuator(actuatorId, currentAction);
-    }
-}
+    // Fonction pour simuler un actionneur (utile pour les tests)
+    function simulateActuator(actuatorId) {
+        // Alterner l'état pour la simulation
+        const button = document.querySelector(`[data-actuator-id="${actuatorId}"]`);
+        const currentAction = button.textContent.includes('Démarrer') ? 'ON' : 'OFF';
 
-// Mettre à jour l'heure de dernière modification
-function updateLastModified(actuatorId) {
-    const element = document.getElementById(`last-update-${actuatorId}`);
-    if (element) {
-        element.textContent = new Date().toLocaleString('fr-FR');
+        if (confirm('Voulez-vous simuler l\'action sur cet actionneur ?')) {
+            toggleActuator(actuatorId, currentAction);
+        }
     }
-}
 
-// Override de la fonction toggleActuator pour mettre à jour l'heure
-const originalToggleActuator = window.toggleActuator;
-window.toggleActuator = function(actuatorId, action) {
-    originalToggleActuator(actuatorId, action);
-    updateLastModified(actuatorId);
-};
+    function commandHardware(actuatorId, action) {
+        if (!confirm(`Envoyer la commande "${action}" au moteur ?`)) return;
+
+        const payload = new FormData();
+        payload.append('actuator_id', actuatorId);
+        payload.append('action', action);
+
+        fetch('?controller=api&action=sendCommand', {
+                method: 'POST',
+                body: payload
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Recharger pour voir le changement d'état
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showNotification(data.error || 'Une erreur est survenue.', 'error');
+                }
+            })
+            .catch(() => showNotification('Erreur de communication.', 'error'));
+    }
+
+    // Mettre à jour l'heure de dernière modification
+    function updateLastModified(actuatorId) {
+        const element = document.getElementById(`last-update-${actuatorId}`);
+        if (element) {
+            element.textContent = new Date().toLocaleString('fr-FR');
+        }
+    }
+
+    // Override de la fonction toggleActuator pour mettre à jour l'heure
+    const originalToggleActuator = window.toggleActuator;
+    window.toggleActuator = function(actuatorId, action) {
+        originalToggleActuator(actuatorId, action);
+        updateLastModified(actuatorId);
+    };
 </script>
 
 <style>
-/* Styles spécifiques aux actionneurs */
-.card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.btn {
-    transition: all 0.2s ease;
-}
-
-.status-indicator {
-    animation: pulse 2s infinite;
-}
-
-.status-on {
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
-}
-
-.status-off {
-    opacity: 0.7;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-
-/* Mode sombre pour l'éco-responsabilité */
-@media (prefers-color-scheme: dark) {
+    /* Styles spécifiques aux actionneurs */
     .card {
-        background-color: #2d2d2d;
-        border-color: #404040;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
-    .card-header {
-        background-color: #404040;
-        border-color: #555;
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
-}
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .status-indicator {
+        animation: pulse 2s infinite;
+    }
+
+    .status-on {
+        box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+    }
+
+    .status-off {
+        opacity: 0.7;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    /* Mode sombre pour l'éco-responsabilité */
+    @media (prefers-color-scheme: dark) {
+        .card {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        .card-header {
+            background-color: #404040;
+            border-color: #555;
+        }
+    }
 </style>

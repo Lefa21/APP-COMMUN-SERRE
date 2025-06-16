@@ -64,7 +64,7 @@
             <div class="col-lg-4 col-md-6 mb-3">
                 <div class="card sensor-card h-100">
                     <div class="card-body">
-                        
+
                         <div class="d-flex align-items-center mb-2">
                             <?php
                             $icon = '';
@@ -92,7 +92,7 @@
                                         }
                                     }
                                     break;
-                                case 'soil_moisture':
+                                case 'humidite_sol':
                                     $icon = '🌱';
                                     if ($sensor['value'] !== null) {
                                         if ($sensor['value'] < 25) {
@@ -107,6 +107,10 @@
                                 case 'luminosite':
                                     $icon = '☀️';
                                     break;
+                                case 'bouton':
+                                    $icon = '📊';
+                                    break;
+                                    /*
                                 case 'ph':
                                     $icon = '🧪';
                                     if ($sensor['value'] !== null) {
@@ -120,29 +124,55 @@
                                 case 'co2':
                                     $icon = '🌬️';
                                     break;
+                                    */
                             }
                             ?>
                             <span class="me-2"><?= $icon ?></span>
                             <span><?= ucfirst($sensor['name']) ?></span>
                         </div>
-                        
-                        <?php if ($sensor['value'] !== null): ?>
+
+                        <?php if (isset($sensor['value']) && $sensor['value'] !== null): ?>
+
                             <div class="mb-2">
-                                <h4 class="<?= $valueClass ?> mb-0">
-                                    <?= number_format($sensor['value'], 1) ?> <?= htmlspecialchars($sensor['unit']) ?>
-                                </h4>
+                                <?php // --- DÉBUT DE LA CORRECTION --- 
+                                ?>
+
+                                <?php if (isset($sensor['name']) && $sensor['name'] === 'bouton'): ?>
+
+                                    <?php // Affichage spécifique pour le capteur de type "bouton"
+                                    $buttonStatusText = ($sensor['value'] == 1) ? 'EN MARCHE' : 'ARRÊT';
+                                    $buttonStatusClass = ($sensor['value'] == 1) ? 'text-success' : 'text-secondary';
+                                    ?>
+                                    <h4 class="<?= $buttonStatusClass ?> mb-0">
+                                        <?= $buttonStatusText ?>
+                                    </h4>
+
+                                <?php else: ?>
+
+                                    <?php // Affichage par défaut pour tous les autres capteurs (température, humidité, etc.) 
+                                    ?>
+                                    <h4 class="<?= $valueClass ?? 'text-primary' ?> mb-0">
+                                        <?= number_format((float)$sensor['value'], 1) ?> <?= htmlspecialchars($sensor['unit'] ?? '') ?>
+                                    </h4>
+
+                                <?php endif; ?>
+
+                                <?php
+                                ?>
+
                                 <small class="text-muted">
-                                    <?= $sensor['timestamp'] ? date('H:i', strtotime($sensor['timestamp'])) : 'Pas de données' ?>
+                                    Dernière lecture à <?= isset($sensor['timestamp']) ? date('H:i:s', strtotime($sensor['timestamp'])) : 'N/A' ?>
                                 </small>
                             </div>
-                            
-                            <!-- Barre de progression pour certains capteurs -->
-                            <?php if (in_array($sensor['name'], ['humidite', 'luminosite'])): ?>
+
+                            <!-- Barre de progression pour certains types de capteurs -->
+                            <?php if (isset($sensor['name']) && in_array($sensor['name'], ['humidity', 'humidite_sol', 'luminosite'])): ?>
                                 <div class="progress" style="height: 4px;">
-                                    <div class="progress-bar <?= $sensor['value'] < 40 ? 'bg-danger' : 'bg-success' ?>" 
-                                         style="width: <?= min(100, max(0, $sensor['value'])) ?>%"></div>
+                                    <div class="progress-bar <?= (float)$sensor['value'] < 40 ? 'bg-warning' : 'bg-success' ?>"
+                                        style="width: <?= min(100, max(0, (float)$sensor['value'])) ?>%"></div>
                                 </div>
                             <?php endif; ?>
+
                         <?php else: ?>
                             <div class="text-muted">
                                 <small>Aucune donnée disponible</small>
@@ -182,39 +212,56 @@
                 <div class="col-lg-4 col-md-6 mb-3">
                     <div class="card h-100">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h6 class="card-title mb-0"><?= htmlspecialchars($actuator['name']) ?></h6>
-                            </div>
-                            
                             <div class="d-flex align-items-center mb-2">
                                 <?php
                                 $icon = '';
-                                switch ($actuator['type']) {
-                                    case 'irrigation': $icon = '💧'; break;
-                                    case 'ventilation': $icon = '🌪️'; break;
-                                    case 'heating': $icon = '🔥'; break;
-                                    case 'lighting': $icon = '💡'; break;
-                                    case 'window': $icon = '🪟'; break;
-                                    default: $icon = '⚡';
+                                switch ($actuator['name']) {
+                                    case 'moteur':
+                                        $icon = '⚡';
+                                        break;
+                                    case 'led':
+                                        $icon = '💡';
+                                        break;
+                                    default:
+                                        $icon = '⚡';
                                 }
                                 ?>
                                 <span class="me-2"><?= $icon ?></span>
-                                <span><?= ucfirst($actuator['type']) ?></span>
+                                <h6 class="card-title mb-0"><?= ucfirst($actuator['name']) ?></h6>
                             </div>
-                            
                             <div class="d-flex align-items-center justify-content-between">
+                                <!-- Partie gauche : Affichage du statut (visible pour TOUS les actionneurs) -->
                                 <div class="d-flex align-items-center">
                                     <span class="status-indicator <?= $actuator['etat'] ? 'status-on' : 'status-off' ?> me-2"></span>
                                     <span class="text-muted">
                                         <?= $actuator['etat'] ? 'Actif' : 'Inactif' ?>
                                     </span>
                                 </div>
-                                 <button
-                                    class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?> btn-sm"
-                                    data-actuator-id="<?= $actuator['id'] ?>"
-                                    onclick="toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
-                                    <?= $actuator['etat'] ? 'Arrêter' : 'Démarrer' ?>
-                                </button>
+
+                                <!-- Partie droite : Le bouton de contrôle (logique conditionnelle) -->
+                                <div>
+                                    <?php
+                                    // On définit le type d'actionneur que vous pouvez contrôler manuellement.
+                                    $controllable_type = 'moteur';
+
+                                    // On vérifie si l'actionneur affiché est bien votre moteur.
+                                    if (isset($actuator['name']) && $actuator['name'] === $controllable_type):
+                                    ?>
+                                        <!-- Si OUI, on affiche le bouton de contrôle qui fonctionne. -->
+                                        <button
+                                            class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?> btn-sm"
+                                            onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')"
+                                            title="Envoyer une commande au moteur">
+                                            <i class="bi bi-gear-wide-connected"></i>
+                                            <?= $actuator['etat'] ? 'Arrêter' : 'Démarrer' ?>
+                                        </button>
+                                    <?php else: ?>
+                                        <!-- Si NON, on affiche un bouton gris et désactivé. -->
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            <i class="bi bi-eye-fill"></i> Lecture Seule
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -232,7 +279,7 @@
                     <div>
                         <h5 class="mb-1">Accès Restreint</h5>
                         <p class="mb-0">
-                            La gestion des actionneurs est réservée aux administrateurs. 
+                            La gestion des actionneurs est réservée aux administrateurs.
                             Vous pouvez consulter les données des capteurs et surveiller l'état de votre serre.
                         </p>
                     </div>
@@ -250,7 +297,7 @@
                 <span class="me-2">🌍</span>
                 <div>
                     <strong>Impact Éco-responsable:</strong>
-                    Cette page utilise un design optimisé pour réduire la consommation d'énergie. 
+                    Cette page utilise un design optimisé pour réduire la consommation d'énergie.
                     Les données sont actualisées intelligemment toutes les 30 secondes uniquement si la page est active.
                     <?php if (!$isAdmin): ?>
                         L'accès limité aux fonctionnalités réduit également l'empreinte énergétique.

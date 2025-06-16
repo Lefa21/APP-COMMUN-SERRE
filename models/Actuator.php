@@ -20,7 +20,6 @@ class Actuator {
             SELECT 
                 a.id, 
                 a.nom as name, 
-                a.type,
                 (SELECT e.etat 
                  FROM etats_actionneurs e 
                  WHERE e.actionneur_id = a.id 
@@ -51,7 +50,6 @@ class Actuator {
             SELECT 
                 a.id, 
                 a.nom as name, 
-                a.type,
                 (SELECT e.etat 
                  FROM etats_actionneurs e 
                  WHERE e.actionneur_id = a.id 
@@ -82,14 +80,12 @@ class Actuator {
             SELECT 
                 a.id, 
                 a.nom as name, 
-                a.type,
                 (SELECT e.etat 
                  FROM etats_actionneurs e 
                  WHERE e.actionneur_id = a.id 
                  ORDER BY e.date_heure DESC 
                  LIMIT 1) as etat
             FROM actionneurs a
-            HAVING etat = 1 -- On filtre APRES avoir calculé l'état pour ne garder que les actifs
             ORDER BY a.nom
         ");
         
@@ -139,11 +135,11 @@ class Actuator {
      * Crée un nouvel actionneur et initialise son état à 0 (OFF).
      * @return bool
      */
-    public function create($name, $type) {
+    public function create($name) {
         try {
             $this->db_remote->beginTransaction();
-            $stmt = $this->db_remote->prepare("INSERT INTO actionneurs (nom, type) VALUES (?, ?)");
-            $stmt->execute([$name, $type]);
+            $stmt = $this->db_remote->prepare("INSERT INTO actionneurs (nom) VALUES (?)");
+            $stmt->execute([$name]);
             $actuatorId = $this->db_remote->lastInsertId();
             $stmt_etat = $this->db_remote->prepare("INSERT INTO etats_actionneurs (actionneur_id, etat) VALUES (?, 0)");
             $stmt_etat->execute([$actuatorId]);
@@ -159,9 +155,9 @@ class Actuator {
      * Met à jour le nom ou le type d'un actionneur.
      * @return bool
      */
-    public function update($id, $name, $type) {
-        $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ?, type = ? WHERE id = ?");
-        return $stmt->execute([$name, $type, $id]);
+    public function update($id, $name) {
+        $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ? WHERE id = ?");
+        return $stmt->execute([$name,$id]);
     }
 
     /**

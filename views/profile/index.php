@@ -3,9 +3,6 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>👤 Mon Profil</h1>
             <div class="btn-group">
-                <a href="<?= BASE_URL ?>?controller=profile&action=activity" class="btn btn-outline-info">
-                    <i class="bi bi-activity"></i> Mon activité
-                </a>
                 <a href="<?= BASE_URL ?>?controller=profile&action=notifications" class="btn btn-outline-warning">
                     <i class="bi bi-bell"></i> Notifications
                 </a>

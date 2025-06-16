@@ -20,8 +20,8 @@
                     case 'temperature': $icon = '🌡️'; break;
                     case 'humidite': $icon = '💧'; break;
                     case 'luminosite': $icon = '☀️'; break;
+                    case 'humidite_sol': $icon = '🌱'; break;
                     /*
-                    case 'soil_moisture': $icon = '🌱'; break;
                     case 'light': $icon = '☀️'; break;
                     case 'ph': $icon = '🧪'; break;
                     case 'co2': $icon = '🌬️'; break;
@@ -32,9 +32,6 @@
                 <?= $icon ?> <?= htmlspecialchars($sensor['name']) ?>
             </h1>
             <div class="btn-group">
-                <button class="btn btn-outline-primary" onclick="simulateData()">
-                    <i class="bi bi-lightning"></i> Simuler données
-                </button>
                 <div class="btn-group">
                     <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="bi bi-download"></i> Exporter
@@ -61,7 +58,7 @@
                     <div class="col-md-6">
                         <table class="table table-borderless">
                             <tr>
-                                <td><strong>Nom:</strong></td>
+                                <td><strong>Type:</strong></td>
                                 <td><?= ucfirst($sensor['name']) ?></td>
                             </tr>
                             <tr>
@@ -72,10 +69,6 @@
                     </div>
                     <div class="col-md-6">
                         <table class="table table-borderless">
-                            <tr>
-                                <td><strong>ID:</strong></td>
-                                <td>#<?= $sensor['id'] ?></td>
-                            </tr>
                             <tr>
                                 <td><strong>État:</strong></td>
                                 <td>
@@ -125,16 +118,25 @@
                             }
                             break;
                         case 'humidite':
-                       // case 'soil_moisture':
+                        case 'humidite_sol':
                             if ($sensor['value'] < 30) {
                                 $valueClass = 'text-danger';
-                                $status = 'Trop bas';
+                                $status = 'Pas assez humide';
                             } elseif ($sensor['value'] > 90) {
                                 $valueClass = 'text-warning';
-                                $status = 'Trop élevé';
+                                $status = 'Sec';
                             } else {
                                 $valueClass = 'text-success';
                                 $status = 'Optimal';
+                            }
+                            break;
+                             case 'bouton':
+                            if ($sensor['value'] == 0) {
+                                $valueClass = 'text-danger';
+                                $status = 'Relâché';
+                            } else{
+                                $valueClass = 'text-success';
+                                $status = 'Pressé';
                             }
                             break;
                             /*

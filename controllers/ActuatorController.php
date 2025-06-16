@@ -96,10 +96,9 @@ class ActuatorController extends BaseController {
     
     private function addActuator() {
         $name = trim($_POST['name'] ?? '');
-        $type = $_POST['type'] ?? '';
         
-        if ($name && $type) {
-            if ($this->actuatorModel->create($name, $type)) {
+        if ($name) {
+            if ($this->actuatorModel->create($name)) {
                 $this->setMessage('Actionneur ajouté avec succès', 'success');
             } else {
                 $this->setMessage('Erreur lors de l\'ajout', 'error');
@@ -136,7 +135,6 @@ class ActuatorController extends BaseController {
         // Simulation de l'envoi de commande (inchangée)
         $command = [
             'actuator_id' => $actuator['id'],
-            'type' => $actuator['type'],
             'action' => $action,
             'timestamp' => time()
         ];

@@ -19,7 +19,7 @@ class SensorController extends BaseController {
         $sensors = $this->getSensorsWithData();
         
         // La fonction getAlerts existe dans votre modèle, donc c'est correct.
-        $alerts = $this->sensorModel->getAlerts(null);
+        $alerts = $this->sensorModel->getAlerts();
         
         $this->render('sensors/index', [
             'sensors' => $sensors,
@@ -147,4 +147,72 @@ class SensorController extends BaseController {
         ];
         return date('Y-m-d H:i:s', strtotime($intervals[$period] ?? '-24 hours'));
     }
+
+    public function export() {
+        $this->requireLogin();
+
+        // 1. Récupérer et valider les paramètres de l'URL
+        $sensorId = (int)($_GET['sensor_id'] ?? 0);
+        $period = $_GET['period'] ?? '24h'; // Période par défaut : 24h
+        $format = $_GET['format'] ?? 'csv';  // Format par défaut : csv
+
+        if (!$sensorId) {
+            $this->setMessage("ID de capteur manquant pour l'exportation.", "error");
+            $this->redirect('?controller=sensor');
+            return;
+        }
+
+        // 2. Récupérer les informations du capteur et les données historiques via le modèle
+        // Note: getSensorWithLatestData est utilisé ici pour avoir les détails (nom, unité), pas pour la valeur.
+        $sensorDetails = $this->sensorModel->getSensorWithLatestData($sensorId);
+        
+        // Calcule la date de début en fonction de la période demandée
+        $startDate = date('Y-m-d H:i:s', strtotime('-' . str_replace(['d', 'h'], [' days', ' hours'], $period)));
+        
+        $sensorData = $this->sensorModel->getSensorData($sensorId, 5000, $startDate); // Limite de 5000 points pour l'export
+
+        if (!$sensorDetails) {
+            $this->setMessage("Capteur introuvable.", "error");
+            $this->redirect('?controller=sensor');
+            return;
+        }
+
+        // 3. Appeler la bonne fonction d'exportation en fonction du format demandé
+        if ($format === 'csv') {
+            $this->exportToCsv($sensorDetails['name'], $sensorDetails['unit'], $sensorData);
+        } else {
+            // Vous pourriez ajouter une logique pour le JSON ici
+            $this->jsonResponse(['details' => $sensorDetails, 'data' => $sensorData]);
+        }
+    }
+
+    /**
+     * Méthode privée pour générer et envoyer un fichier CSV.
+     */
+    private function exportToCsv($sensorName, $sensorUnit, $data) {
+        $filename = "export_capteur_" . preg_replace('/[^a-zA-Z0-9]/', '_', $sensorName) . "_" . date('Y-m-d') . ".csv";
+
+        // Envoyer les en-têtes HTTP pour forcer le téléchargement
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        // Ouvrir le flux de sortie PHP
+        $output = fopen('php://output', 'w');
+
+        // Écrire la ligne d'en-tête du CSV
+        fputcsv($output, ['Timestamp', 'Valeur', 'Unite']);
+
+        // Écrire chaque ligne de donnée
+        foreach ($data as $row) {
+            fputcsv($output, [
+                $row['timestamp'],
+                $row['value'],
+                $sensorUnit
+            ]);
+        }
+
+        fclose($output);
+        exit(); // Terminer le script après la génération du fichier
+    }
+
 }

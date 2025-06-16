@@ -528,7 +528,7 @@ async function loadActuatorsData() {
 
 // Mettre à jour le graphique de température
 async function updateTemperatureChart() {
-    const tempSensors = sensorsData.filter(s => s.type === 'temperature');
+    const tempSensors = sensorsData.filter(s => s.name === 'temperature');
     if (tempSensors.length === 0) return;
     
     try {
@@ -550,7 +550,7 @@ async function updateTemperatureChart() {
 
 // Mettre à jour le graphique d'humidité
 async function updateHumidityChart() {
-    const humSensors = sensorsData.filter(s => s.type === 'humidity');
+    const humSensors = sensorsData.filter(s => s.name === 'humidite');
     if (humSensors.length === 0) return;
     
     try {
@@ -595,7 +595,7 @@ function updateSensorSelects() {
         sensorsData.forEach(sensor => {
             const option = document.createElement('option');
             option.value = sensor.id;
-            option.textContent = `${sensor.name} (${sensor.type})`;
+            option.textContent = `${sensor.name}`;
             select.appendChild(option);
         });
     });
@@ -617,12 +617,12 @@ function updateRealtimeData() {
         col.className = 'col-md-3 mb-3';
         
         const value = sensor.value !== null ? sensor.value.toFixed(1) : '--';
-        const status = getValueStatus(sensor.type, sensor.value);
+        const status = getValueStatus(sensor.name, sensor.value);
         
         col.innerHTML = `
             <div class="card text-center h-100">
                 <div class="card-body">
-                    <div class="mb-2">${getTypeIcon(sensor.type)}</div>
+                    <div class="mb-2">${getTypeIcon(sensor.name)}</div>
                     <h6 class="card-title">${sensor.name}</h6>
                     <h4 class="mb-1 ${status.class}">${value} ${sensor.unit}</h4>
                     <small class="text-muted">${sensor.timestamp ? timeAgo(sensor.timestamp) : 'Pas de données'}</small>
@@ -671,8 +671,8 @@ function getValueStatus(type, value) {
             if (value < 15 || value > 35) return { class: 'text-danger', status: 'critical' };
             if (value < 18 || value > 30) return { class: 'text-warning', status: 'warning' };
             return { class: 'text-success', status: 'normal' };
-        case 'humidity':
-        case 'soil_moisture':
+        case 'humidite':
+       case 'humidite_sol':
             if (value < 30) return { class: 'text-danger', status: 'critical' };
             if (value > 90) return { class: 'text-warning', status: 'warning' };
             return { class: 'text-success', status: 'normal' };
@@ -685,11 +685,11 @@ function getValueStatus(type, value) {
 function getTypeIcon(type) {
     const icons = {
         'temperature': '🌡️',
-        'humidity': '💧',
-        'soil_moisture': '🌱',
-        'light': '☀️',
-        'ph': '🧪',
-        'co2': '🌬️'
+        'humidite': '💧',
+        'humidite_sol': '🌱',
+        'luminosite': '☀️',
+        //'ph': '🧪',
+       // 'co2': '🌬️'
     };
     return icons[type] || '📊';
 }
@@ -769,10 +769,10 @@ function exportChart(chartId) {
 
 function exportAllData() {
     // Créer un CSV avec toutes les données
-    let csv = 'Capteur,Type,Valeur,Unité,Équipe,Timestamp\n';
+    let csv = 'Capteur,Valeur,Unité,Timestamp\n';
     
     sensorsData.forEach(sensor => {
-        csv += `"${sensor.name}","${sensor.type}",${sensor.value || ''},"${sensor.unit}","${sensor.timestamp || ''}"\n`;
+        csv += `"${sensor.name}",${sensor.value || ''},"${sensor.unit}","${sensor.timestamp || ''}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
