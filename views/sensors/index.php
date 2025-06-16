@@ -95,7 +95,7 @@
     <?php else: ?>
         <?php foreach ($sensors as $sensor): ?>
             <div class="col-lg-4 col-md-6 mb-4 sensor-card" 
-                 data-type="<?= $sensor['type'] ?>">
+                 data-type="<?= $sensor['name'] ?>">
                 <div class="card h-100 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><?= htmlspecialchars($sensor['name']) ?></h6>
@@ -109,7 +109,7 @@
                             $color = 'text-primary';
                             $status = 'normal';
                             
-                            switch ($sensor['type']) {
+                            switch ($sensor['name']) {
                                 case 'temperature':
                                     $icon = '🌡️';
                                     if ($sensor['value'] !== null) {
@@ -124,7 +124,7 @@
                                         }
                                     }
                                     break;
-                                case 'humidity':
+                                case 'humidite':
                                     $icon = '💧';
                                     if ($sensor['value'] !== null) {
                                         if ($sensor['value'] < 30 || $sensor['value'] > 90) {
@@ -135,6 +135,7 @@
                                         }
                                     }
                                     break;
+                                    /*
                                 case 'soil_moisture':
                                     $icon = '🌱';
                                     if ($sensor['value'] !== null) {
@@ -149,9 +150,11 @@
                                         }
                                     }
                                     break;
-                                case 'light':
+                                    */
+                                case 'luminosite':
                                     $icon = '☀️';
                                     break;
+                                    /*
                                 case 'ph':
                                     $icon = '🧪';
                                     if ($sensor['value'] !== null) {
@@ -166,6 +169,7 @@
                                 case 'co2':
                                     $icon = '🌬️';
                                     break;
+                                    */
                             }
                             ?>
                             <span class="me-3" style="font-size: 2rem;"><?= $icon ?></span>

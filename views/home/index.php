@@ -64,15 +64,12 @@
             <div class="col-lg-4 col-md-6 mb-3">
                 <div class="card sensor-card h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="card-title mb-0"><?= htmlspecialchars($sensor['name']) ?></h6>
-                        </div>
                         
                         <div class="d-flex align-items-center mb-2">
                             <?php
                             $icon = '';
                             $valueClass = 'text-primary';
-                            switch ($sensor['type']) {
+                            switch ($sensor['name']) {
                                 case 'temperature':
                                     $icon = '🌡️';
                                     if ($sensor['value'] !== null) {
@@ -85,7 +82,7 @@
                                         }
                                     }
                                     break;
-                                case 'humidity':
+                                case 'humidite':
                                     $icon = '💧';
                                     if ($sensor['value'] !== null) {
                                         if ($sensor['value'] < 30 || $sensor['value'] > 90) {
@@ -107,7 +104,7 @@
                                         }
                                     }
                                     break;
-                                case 'light':
+                                case 'luminosite':
                                     $icon = '☀️';
                                     break;
                                 case 'ph':
@@ -126,7 +123,7 @@
                             }
                             ?>
                             <span class="me-2"><?= $icon ?></span>
-                            <span><?= ucfirst($sensor['type']) ?></span>
+                            <span><?= ucfirst($sensor['name']) ?></span>
                         </div>
                         
                         <?php if ($sensor['value'] !== null): ?>
@@ -140,7 +137,7 @@
                             </div>
                             
                             <!-- Barre de progression pour certains capteurs -->
-                            <?php if (in_array($sensor['type'], ['humidity', 'soil_moisture'])): ?>
+                            <?php if (in_array($sensor['name'], ['humidite', 'luminosite'])): ?>
                                 <div class="progress" style="height: 4px;">
                                     <div class="progress-bar <?= $sensor['value'] < 40 ? 'bg-danger' : 'bg-success' ?>" 
                                          style="width: <?= min(100, max(0, $sensor['value'])) ?>%"></div>

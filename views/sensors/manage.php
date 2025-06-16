@@ -55,11 +55,8 @@
                         <select id="typeFilter" class="form-select" onchange="filterSensors()">
                             <option value="">Tous les types</option>
                             <option value="temperature">Température</option>
-                            <option value="humidity">Humidité</option>
-                            <option value="soil_moisture">Humidité du sol</option>
-                            <option value="light">Luminosité</option>
-                            <option value="ph">pH</option>
-                            <option value="co2">CO2</option>
+                            <option value="humidite">Humidité</option>
+                            <option value="luminosite">Luminosité</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -98,7 +95,6 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nom</th>
-                                <th>Type</th>
                                 <th>Unité</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
@@ -107,7 +103,7 @@
                         <tbody>
                             <?php foreach ($sensors as $sensor): ?>
                                 <tr  
-                                    data-type="<?= $sensor['type'] ?>" 
+                                    data-type="<?= $sensor['name'] ?>" 
                                     data-status="<?= $sensor['is_active'] ?>"
                                     class="sensor-row">
                                     <td><strong>#<?= $sensor['id'] ?></strong></td>
@@ -115,13 +111,15 @@
                                         <div class="d-flex align-items-center">
                                             <?php
                                             $icon = '';
-                                            switch ($sensor['type']) {
+                                            switch ($sensor['name']) {
                                                 case 'temperature': $icon = '🌡️'; break;
-                                                case 'humidity': $icon = '💧'; break;
+                                                case 'humidite': $icon = '💧'; break;
+                                                case 'luminosite': $icon = '☀️'; break;
+                                                /*
                                                 case 'soil_moisture': $icon = '🌱'; break;
-                                                case 'light': $icon = '☀️'; break;
                                                 case 'ph': $icon = '🧪'; break;
                                                 case 'co2': $icon = '🌬️'; break;
+                                                */
                                                 default: $icon = '📊';
                                             }
                                             ?>
@@ -129,7 +127,6 @@
                                             <?= htmlspecialchars($sensor['name']) ?>
                                         </div>
                                     </td>
-                                    <td><?= ucfirst($sensor['type']) ?></td>
                                     <td><?= htmlspecialchars($sensor['unit']) ?></td>
                                     <td>
                                         <span class="badge bg-<?= $sensor['is_active'] ? 'success' : 'secondary' ?>">
@@ -197,15 +194,12 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="sensorType" class="form-label">Type *</label>
+                                <label for="sensorType" class="form-label">Nom *</label>
                                 <select class="form-select" id="sensorType" name="type" required>
-                                    <option value="">Choisir un type</option>
+                                    <option value="">Choisir un nom</option>
                                     <option value="temperature">🌡️ Température</option>
-                                    <option value="humidity">💧 Humidité</option>
-                                    <option value="soil_moisture">🌱 Humidité du sol</option>
-                                    <option value="light">☀️ Luminosité</option>
-                                    <option value="ph">🧪 pH</option>
-                                    <option value="co2">🌬️ CO2</option>
+                                    <option value="humidite">💧 Humidité</option>
+                                    <option value="luminosite">☀️ Luminosité</option>
                                 </select>
                             </div>
                         </div>
@@ -247,19 +241,6 @@
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="editSensorType" class="form-label">Type *</label>
-                                <select class="form-select" id="editSensorType" name="type" required>
-                                    <option value="temperature">🌡️ Température</option>
-                                    <option value="humidity">💧 Humidité</option>
-                                    <option value="soil_moisture">🌱 Humidité du sol</option>
-                                    <option value="light">☀️ Luminosité</option>
-                                    <option value="ph">🧪 pH</option>
-                                    <option value="co2">🌬️ CO2</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="editSensorUnit" class="form-label">Unité *</label>
@@ -366,7 +347,6 @@ function editSensor(sensorId) {
     
     document.getElementById('editSensorId').value = sensor.id;
     document.getElementById('editSensorName').value = sensor.name;
-    document.getElementById('editSensorType').value = sensor.type;
     document.getElementById('editSensorUnit').value = sensor.unit;
     document.getElementById('editSensorActive').checked = sensor.is_active == 1;
     
@@ -420,11 +400,13 @@ document.getElementById('sensorType').addEventListener('change', function() {
     const unitField = document.getElementById('sensorUnit');
     const units = {
         'temperature': '°C',
-        'humidity': '%',
-        'soil_moisture': '%',
-        'light': 'lux',
+        'humidite': '%',
+        'luminosite': 'lux',
+        /*
         'ph': 'pH',
         'co2': 'ppm'
+        'soil_moisture': '%',
+        */
     };
     
     if (units[this.value]) {

@@ -103,11 +103,10 @@ class SensorController extends BaseController {
     private function addSensor() {
         // ... (logique de récupération des POST)
         $name = trim($_POST['name'] ?? '');
-        $type = $_POST['type'] ?? '';
         $unit = trim($_POST['unit'] ?? '');
 
         // La fonction addSensor existe, c'est correct
-        if ($this->sensorModel->addSensor($name, $type, $unit)) {
+        if ($this->sensorModel->addSensor($name, $unit)) {
             $this->setMessage('Capteur ajouté avec succès', 'success');
         } else {
             $this->setMessage('Erreur', 'error');
@@ -118,11 +117,10 @@ class SensorController extends BaseController {
         // ... (logique de récupération des POST)
         $id = (int)($_POST['sensor_id'] ?? 0);
         $name = trim($_POST['name'] ?? '');
-        $type = $_POST['type'] ?? '';
         $unit = trim($_POST['unit'] ?? '');
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         // La fonction updateSensor existe, c'est correct
-        if ($this->sensorModel->update($id, $name, $type, $unit, $isActive)) {
+        if ($this->sensorModel->update($id, $name, $unit, $isActive)) {
             $this->setMessage('Capteur modifié avec succès', 'success');
         } else {
             $this->setMessage('Erreur', 'error');

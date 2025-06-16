@@ -16,13 +16,16 @@
             <h1>
                 <?php
                 $icon = '';
-                switch ($sensor['type']) {
+                switch ($sensor['name']) {
                     case 'temperature': $icon = '🌡️'; break;
-                    case 'humidity': $icon = '💧'; break;
+                    case 'humidite': $icon = '💧'; break;
+                    case 'luminosite': $icon = '☀️'; break;
+                    /*
                     case 'soil_moisture': $icon = '🌱'; break;
                     case 'light': $icon = '☀️'; break;
                     case 'ph': $icon = '🧪'; break;
                     case 'co2': $icon = '🌬️'; break;
+                    */
                     default: $icon = '📊';
                 }
                 ?>
@@ -58,8 +61,8 @@
                     <div class="col-md-6">
                         <table class="table table-borderless">
                             <tr>
-                                <td><strong>Type:</strong></td>
-                                <td><?= ucfirst($sensor['type']) ?></td>
+                                <td><strong>Nom:</strong></td>
+                                <td><?= ucfirst($sensor['name']) ?></td>
                             </tr>
                             <tr>
                                 <td><strong>Unité:</strong></td>
@@ -108,7 +111,7 @@
                     $status = 'Normal';
                     
                     // Déterminer la classe CSS selon la valeur et le type
-                    switch ($sensor['type']) {
+                    switch ($sensor['name']) {
                         case 'temperature':
                             if ($sensor['value'] < 15 || $sensor['value'] > 35) {
                                 $valueClass = 'text-danger';
@@ -121,8 +124,8 @@
                                 $status = 'Optimal';
                             }
                             break;
-                        case 'humidity':
-                        case 'soil_moisture':
+                        case 'humidite':
+                       // case 'soil_moisture':
                             if ($sensor['value'] < 30) {
                                 $valueClass = 'text-danger';
                                 $status = 'Trop bas';
@@ -134,6 +137,7 @@
                                 $status = 'Optimal';
                             }
                             break;
+                            /*
                         case 'ph':
                             if ($sensor['value'] < 6.0 || $sensor['value'] > 7.5) {
                                 $valueClass = 'text-warning';
@@ -143,6 +147,7 @@
                                 $status = 'Optimal';
                             }
                             break;
+                            */
                     }
                     ?>
                     <h2 class="<?= $valueClass ?> mb-1">
@@ -275,7 +280,7 @@
                                         <td>
                                             <?php
                                             $badgeClass = 'bg-primary';
-                                            if ($sensor['type'] === 'temperature') {
+                                            if ($sensor['name'] === 'temperature') {
                                                 if ($reading['value'] < 15 || $reading['value'] > 35) {
                                                     $badgeClass = 'bg-danger';
                                                 } elseif ($reading['value'] < 18 || $reading['value'] > 30) {
