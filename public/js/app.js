@@ -107,7 +107,7 @@ function initSensorManagement(sensorsData) {
     // Auto-complétion de l'unité
     document.getElementById('sensorType')?.addEventListener('change', function() {
         const unitField = document.getElementById('sensorUnit');
-        const units = { temperature: '°C', humidity: '%', soil_moisture: '%', light: 'lux', ph: 'pH', co2: 'ppm' };
+        const units = { temperature: '°C', humidity: '%', soil_moisture: '%', light: '%', ph: 'pH', co2: 'ppm' };
         if (units[this.value]) unitField.value = units[this.value];
     });
 }

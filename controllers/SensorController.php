@@ -187,6 +187,23 @@ class SensorController extends BaseController {
     }
 
     /**
+ * Convertit une valeur brute d'humidité du sol en pourcentage.
+ *
+ * @param int $valeurBrute La valeur lue depuis le capteur.
+ * @param int $valeurSec La valeur mesurée lorsque le capteur est sec.
+ * @param int $valeurHumide La valeur mesurée lorsque le capteur est dans l'eau.
+ * @return int Le pourcentage d'humidité (de 0 à 100).
+ */
+function convertirHumiditeEnPourcentage($valeurBrute, $valeurSec, $valeurHumide) {
+    // S'assure que la valeur brute est bien dans les limites calibrées
+    $valeurBrute = max($valeurHumide, min($valeurSec, $valeurBrute));
+    
+    // Calcule le pourcentage
+    $pourcentage = (($valeurBrute - $valeurSec) / ($valeurHumide - $valeurSec)) * 100;
+    
+    return round($pourcentage);
+}
+    /**
      * Méthode privée pour générer et envoyer un fichier CSV.
      */
     private function exportToCsv($sensorName, $sensorUnit, $data) {

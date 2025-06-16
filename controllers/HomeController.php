@@ -4,18 +4,21 @@ require_once BASE_PATH . '/controllers/BaseController.php';
 require_once BASE_PATH . '/models/Sensor.php';
 require_once BASE_PATH . '/models/Actuator.php';
 require_once BASE_PATH . '/models/ContactMessage.php';
+require_once BASE_PATH . '/models/Weather.php';
 
 class HomeController extends BaseController {
     
     private $sensorModel;
     private $actuatorModel;
     private $contactMessageModel;
+    private $weatherModel;
 
     public function __construct() {
         parent::__construct();
         $this->sensorModel = new Sensor();
         $this->actuatorModel = new Actuator();
-         $this->contactMessageModel = new ContactMessage();
+        $this->contactMessageModel = new ContactMessage();
+        $this->weatherModel = new Weather();
     }
 
     public function index() {
@@ -28,10 +31,12 @@ class HomeController extends BaseController {
         // Code existant pour les utilisateurs connectés
         $sensors = $this->getSensorsWithData(); 
         $actuators = $this->actuatorModel->findAllActive();
+        $weather = $this->weatherModel->getCurrentWeather('Paris');
         
         $data = [
             'sensors' => $sensors,
             'actuators' => $actuators,
+             'weather' => $weather,
             'isAdmin' => $this->isAdmin()
         ];
         

@@ -38,6 +38,55 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🌦️ Météo Extérieure (Paris)</h5>
+            </div>
+            <div class="card-body">
+                <?php if (isset($weather) && $weather !== null): ?>
+                    <div class="row align-items-center">
+                        <!-- Colonne pour la température principale et l'icône -->
+                        <div class="col-md-4 text-center border-end">
+                            <img src="http://openweathermap.org/img/wn/<?= $weather['icon'] ?>@2x.png" alt="Icône météo" style="width: 80px; height: 80px;">
+                            <strong class="display-5 fw-bold mb-0"><?= round($weather['temperature']) ?>°C</strong>
+                            <p class="text-muted mb-0"><?= htmlspecialchars($weather['description']) ?></p>
+                        </div>
+
+                        <!-- Colonne pour les détails supplémentaires -->
+                        <div class="col-md-8">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fs-5"><i class="bi bi-droplet-fill text-primary"></i></div>
+                                    <strong class="d-block"><?= $weather['humidity'] ?>%</strong>
+                                    <small class="text-muted">Humidité</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fs-5"><i class="bi bi-wind text-secondary"></i></div>
+                                    <strong class="d-block"><?= $weather['wind_speed'] ?> km/h</strong>
+                                    <small class="text-muted">Vent</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fs-5"><i class="bi bi-arrows-collapse text-info"></i></div>
+                                    <strong class="d-block"><?= $weather['pressure'] ?> hPa</strong>
+                                    <small class="text-muted">Pression</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- Message si l'API ne répond pas -->
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-cloud-slash fs-1"></i>
+                        <p class="mb-0 mt-2">Le service météo est actuellement indisponible.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Capteurs -->
 <div class="row mb-4 mt-4">
     <div class="col-12">
@@ -132,33 +181,30 @@
                         </div>
 
                         <?php if (isset($sensor['value']) && $sensor['value'] !== null): ?>
-
                             <div class="mb-2">
-                                <?php // --- DÉBUT DE LA CORRECTION --- 
-                                ?>
+                                <?php if (isset($sensor['name']) && $sensor['name'] === 'humidite'): ?>
 
-                                <?php if (isset($sensor['name']) && $sensor['name'] === 'bouton'): ?>
+                                    <!-- Affichage spécifique pour l'humidité du sol -->
+                                    <h4 class="mb-0">
+                                        <?= round($sensor['value'] ?? 0) ?> <small class="text-muted">%</small>
+                                    </h4>
 
-                                    <?php // Affichage spécifique pour le capteur de type "bouton"
-                                    $buttonStatusText = ($sensor['value'] == 1) ? 'EN MARCHE' : 'ARRÊT';
-                                    $buttonStatusClass = ($sensor['value'] == 1) ? 'text-success' : 'text-secondary';
-                                    ?>
-                                    <h4 class="<?= $buttonStatusClass ?> mb-0">
-                                        <?= $buttonStatusText ?>
+                                <?php elseif (isset($sensor['name']) && $sensor['name'] === 'bouton'): ?>
+
+                                    <!-- Affichage pour le bouton -->
+                                    <h4 class="mb-0 <?= $sensor['value'] == 1 ? 'text-success' : 'text-secondary' ?>">
+                                        <?= $sensor['value'] == 1 ? 'EN MARCHE' : 'ARRÊT' ?>
                                     </h4>
 
                                 <?php else: ?>
 
-                                    <?php // Affichage par défaut pour tous les autres capteurs (température, humidité, etc.) 
-                                    ?>
-                                    <h4 class="<?= $valueClass ?? 'text-primary' ?> mb-0">
-                                        <?= number_format((float)$sensor['value'], 1) ?> <?= htmlspecialchars($sensor['unit'] ?? '') ?>
+                                    <!-- Affichage par défaut pour les autres capteurs -->
+                                    <h4 class="mb-0">
+                                        <?= number_format((float)($sensor['value'] ?? 0), 1) ?>
+                                        <small class="text-muted"><?= htmlspecialchars($sensor['unit'] ?? '%') ?></small>
                                     </h4>
 
                                 <?php endif; ?>
-
-                                <?php
-                                ?>
 
                                 <small class="text-muted">
                                     Dernière lecture à <?= isset($sensor['timestamp']) ? date('H:i:s', strtotime($sensor['timestamp'])) : 'N/A' ?>

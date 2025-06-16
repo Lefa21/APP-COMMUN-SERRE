@@ -25,6 +25,8 @@ class Sensor {
     $stmt->execute([$sensorId]);
     return $stmt->fetch();
 }
+
+
      
     public function addSensor($name, $unit) {
         $stmt = $this->db->prepare("

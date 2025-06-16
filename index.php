@@ -26,6 +26,7 @@ setSecurityHeaders();
 // Autoloader simple
 // Inclure la configuration
 require_once BASE_PATH . '/config/Database.php';
+require_once BASE_PATH . '/helpers/conversion_helper.php'; 
 
 spl_autoload_register(function ($class) {
     $paths = [

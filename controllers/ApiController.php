@@ -210,21 +210,19 @@ class ApiController extends BaseController {
      * Reçoit l'état des capteurs depuis le script Python, les enregistre,
      * et applique la logique d'automatisation pour le moteur.
      */
-    public function syncSensors() {
+       public function syncSensors() {
         // Sécurité
         $apiKey = $_POST['api_key'] ?? '';
         if (!$this->validateApiKey($apiKey)) {
             $this->jsonResponse(['error' => 'Clé API invalide'], 401);
         }
 
-        // Récupération des données
+        // Récupération des données brutes envoyées par Python
         $button_sensor_id = (int)($_POST['button_sensor_id'] ?? 0);
         $button_state = (int)($_POST['button_state'] ?? 0);
         $humidity_sensor_id = (int)($_POST['humidity_sensor_id'] ?? 0);
-        $humidity_value = (float)($_POST['humidity_value'] ?? 0.0);
+        $raw_humidity_value = (float)($_POST['humidity_value'] ?? 0.0);
         
-        // IMPORTANT: L'ID de votre moteur doit être connu ici.
-        // Idéalement, il serait récupéré via une configuration.
         $motor_actuator_id = 2; // ID du moteur dans votre BDD
 
         if (!$button_sensor_id || !$humidity_sensor_id || !$motor_actuator_id) {
@@ -232,20 +230,25 @@ class ApiController extends BaseController {
         }
 
         try {
-            // 1. Enregistrer les valeurs des capteurs
+            // --- Logique de Conversion ---
+            
+            // 1. On convertit la valeur brute d'humidité en pourcentage
+            $pourcentage_humidite = convertirHumiditeEnPourcentage($raw_humidity_value);
+
+            // 2. On enregistre le POURCENTAGE dans la base de données, pas la valeur brute
+            $this->sensorModel->addSensorData($humidity_sensor_id, $pourcentage_humidite);
+            
+            // 3. On enregistre aussi l'état du bouton
             $this->sensorModel->addSensorData($button_sensor_id, $button_state);
-            $this->sensorModel->addSensorData($humidity_sensor_id, $humidity_value);
             
-            // 2. LOGIQUE MÉTIER : Commander le moteur en fonction de l'état du bouton
+            // 4. LOGIQUE MÉTIER : Commander le moteur en fonction de l'état du bouton
             $action_to_perform = ($button_state == 1) ? 'ON' : 'OFF';
-            
-            // On met à jour l'état du moteur dans la base de données
             $this->actuatorModel->toggleState($motor_actuator_id, $action_to_perform, 'system');
             
             $this->jsonResponse(['success' => true, 'message' => 'État synchronisé.']);
 
         } catch (Exception $e) {
-            error_log("API hardwareSync Error: " . $e->getMessage());
+            error_log("API syncSensors Error: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'error' => 'Erreur serveur.'], 500);
         }
     }

@@ -153,7 +153,7 @@
                     }
                     ?>
                     <h2 class="<?= $valueClass ?> mb-1">
-                        <?= number_format($sensor['value'], 1) ?>
+                        <?= round($sensor['value'] ?? 0) ?>
                         <small><?= htmlspecialchars($sensor['unit']) ?></small>
                     </h2>
                     <p class="mb-0">

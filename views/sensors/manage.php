@@ -201,7 +201,7 @@
                             <div class="mb-3">
                                 <label for="sensorUnit" class="form-label">Unité *</label>
                                 <input type="text" class="form-control" id="sensorUnit" name="unit" required 
-                                       placeholder="Ex: °C, %, lux">
+                                       placeholder="Ex: °C, %, %">
                             </div>
                         </div>
                     </div>
@@ -350,7 +350,7 @@ document.getElementById('sensorType').addEventListener('change', function() {
     const units = {
         'temperature': '°C',
         'humidite': '%',
-        'luminosite': 'lux',
+        'luminosite': '%',
         'humidite_sol': '%',
 
         /*
