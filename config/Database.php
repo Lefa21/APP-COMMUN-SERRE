@@ -4,46 +4,48 @@ class Database {
     private static $instances = [];
     private $connection;
     private static $configs = [
-     /*
+     
+
+        
+                
         'remote' => [
+            'host' => 'localhost',
+            'dbname' => '8PDuqiQ06b_bdd_serre',
+            'user' => 'root',
+            'pwd' => ''
+        ],
+
+        'local' => [
+            'host' => 'localhost',
+            'dbname' => '8PDuqiQ06b_bdd_serre',
+            'user' => 'root',
+            'pwd' => ''
+        ]
+            /*
+                'remote' => [
             'host' => '185.216.26.53',
             'dbname' => 'app_g3',
             'user' => 'g3',
             'pwd' => 'azertyg3'
         ],
-        */
-                
-/*
         'remote' => [
-            'host' => 'localhost',
-            'dbname' => '8PDuqiQ06b_bdd_serre',
-            'user' => 'root',
-            'pwd' => ''
+            'host' => 'herogu.garageisep.com',
+            'dbname' => 'm0Vewl0gM0_green_puls',
+            'user' => 'IyckUxk4yF_green_puls',
+            'pwd' => 'EclQFY8uDGFY6Vbv'
         ],
 
         'local' => [
-            'host' => 'localhost',
-            'dbname' => '8PDuqiQ06b_bdd_serre',
-            'user' => 'root',
-            'pwd' => ''
-        ]
+            'host' => 'herogu.garageisep.com',
+            'dbname' => 'm0Vewl0gM0_green_puls',
+            'user' => 'IyckUxk4yF_green_puls',
+            'pwd' => 'EclQFY8uDGFY6Vbv'
+        ],
             */
-        
-        'remote' => [
-            'host' => 'herogu.garageisep.com',
-            'dbname' => 'm0Vewl0gM0_green_puls',
-            'user' => 'IyckUxk4yF_green_puls',
-            'pwd' => 'EclQFY8uDGFY6Vbv'
-        ],
-
-        'local' => [
-            'host' => 'herogu.garageisep.com',
-            'dbname' => 'm0Vewl0gM0_green_puls',
-            'user' => 'IyckUxk4yF_green_puls',
-            'pwd' => 'EclQFY8uDGFY6Vbv'
-        ]
     ];
 
+  
+ 
     private function __construct($config) {
         try {
             $this->connection = new PDO(
