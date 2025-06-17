@@ -28,54 +28,22 @@ class Actuator {
             FROM actionneurs a
             WHERE a.id = ?
         ");
-        
+
         $stmt->execute([$id]);
         $actuator = $stmt->fetch();
 
-        // Si l'actionneur est trouvé, on s'assure que l'état n'est pas nul
         if ($actuator) {
-            $actuator['etat'] = $actuator['etat'] ?? 0; // Par défaut à 0 (OFF)
+            $actuator['etat'] = $actuator['etat'] ?? 0;
         }
 
         return $actuator;
     }
 
-   /**
+    /**
      * Récupère tous les actionneurs avec leur état le plus récent.
-     * La clé retournée est maintenant 'etat' pour correspondre à la base de données.
      * @return array
      */
     public function findAll() {
-        $stmt = $this->db_remote->query("
-            SELECT 
-                a.id, 
-                a.nom as name, 
-                (SELECT e.etat 
-                 FROM etats_actionneurs e 
-                 WHERE e.actionneur_id = a.id 
-                 ORDER BY e.date_heure DESC 
-                 LIMIT 1) as etat -- On utilise 'etat' comme nom de clé
-            FROM actionneurs a
-            ORDER BY a.nom
-        ");
-        
-        $actuators = $stmt->fetchAll();
-        
-        // S'assurer que 'etat' n'est pas NULL s'il n'y a jamais eu d'état enregistré.
-        foreach ($actuators as &$actuator) {
-            $actuator['etat'] = $actuator['etat'] ?? 0; // Par défaut à 0 (OFF)
-        }
-
-        return $actuators;
-    }
-
-    /**
-     * Récupère tous les actionneurs dont le dernier état connu est "ON" (actif).
-     * @return array
-     */
-    public function findAllActive() {
-        // La requête est modifiée pour joindre la table des états
-        // et filtrer sur l'état le plus récent.
         $stmt = $this->db_remote->query("
             SELECT 
                 a.id, 
@@ -88,15 +56,37 @@ class Actuator {
             FROM actionneurs a
             ORDER BY a.nom
         ");
-        
-        return $stmt->fetchAll();
+
+        $actuators = $stmt->fetchAll();
+
+        foreach ($actuators as &$actuator) {
+            $actuator['etat'] = $actuator['etat'] ?? 0;
+        }
+
+        return $actuators;
     }
-    
+
     /**
-     * Récupère l'activité récente en interrogeant les deux bases de données.
-     * @param int $limit
+     * Récupère tous les actionneurs dont le dernier état est ON.
      * @return array
      */
+    public function findAllActive() {
+        $stmt = $this->db_remote->query("
+            SELECT 
+                a.id, 
+                a.nom as name, 
+                (SELECT e.etat 
+                 FROM etats_actionneurs e 
+                 WHERE e.actionneur_id = a.id 
+                 ORDER BY e.date_heure DESC 
+                 LIMIT 1) as etat
+            FROM actionneurs a
+            HAVING etat = 1
+            ORDER BY a.nom
+        ");
+
+        return $stmt->fetchAll();
+    }
 
     /**
      * Change l'état d'un actionneur en insérant une nouvelle ligne dans etats_actionneurs
@@ -107,15 +97,15 @@ class Actuator {
         $newState = ($action === 'ON') ? 1 : 0;
 
         try {
-            // 1. Insérer le nouvel état dans la BD distante
             $this->db_remote->beginTransaction();
+
             $stmt_remote = $this->db_remote->prepare("
                 INSERT INTO etats_actionneurs (actionneur_id, etat) VALUES (?, ?)
             ");
             $stmt_remote->execute([$actuatorId, $newState]);
+
             $this->db_remote->commit();
-            
-            // 2. Journaliser (log) l'action dans la BD locale
+
             $stmt_local = $this->db_local->prepare("
                 INSERT INTO actuator_logs (actionneur_id, action, user_id) VALUES (?, ?, ?)
             ");
@@ -130,19 +120,22 @@ class Actuator {
             return false;
         }
     }
-    
-      /**
+
+    /**
      * Crée un nouvel actionneur et initialise son état à 0 (OFF).
      * @return bool
      */
     public function create($name) {
         try {
             $this->db_remote->beginTransaction();
+
             $stmt = $this->db_remote->prepare("INSERT INTO actionneurs (nom) VALUES (?)");
             $stmt->execute([$name]);
+
             $actuatorId = $this->db_remote->lastInsertId();
             $stmt_etat = $this->db_remote->prepare("INSERT INTO etats_actionneurs (actionneur_id, etat) VALUES (?, 0)");
             $stmt_etat->execute([$actuatorId]);
+
             $this->db_remote->commit();
             return true;
         } catch (Exception $e) {
@@ -151,21 +144,16 @@ class Actuator {
         }
     }
 
-       /**
-     * Met à jour le nom ou le type d'un actionneur.
+    /**
+     * Met à jour le nom d'un actionneur.
      * @return bool
      */
     public function update($id, $name) {
         $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ? WHERE id = ?");
-        return $stmt->execute([$name,$id]);
+        return $stmt->execute([$name, $id]);
     }
 
     /**
-     * Supprime un actionneur de la BD distante.
-     * Note : Les logs dans la BD locale ne seront pas supprimés, ce qui est souvent le comportement souhaité.
-     * @return bool
-     */
-   /**
      * Supprime un actionneur et tous ses états associés.
      * @return bool
      */

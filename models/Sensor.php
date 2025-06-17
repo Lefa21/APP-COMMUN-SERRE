@@ -5,7 +5,7 @@ class Sensor {
     
   public function __construct() {
         // Ce modèle gère les capteurs et mesures, qui sont sur la BD distante.
-        $this->db = Database::getConnection('local');
+        $this->db = Database::getConnection('remote');
     }
     
 

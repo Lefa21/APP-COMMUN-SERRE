@@ -242,7 +242,7 @@ class ApiController extends BaseController {
             $this->sensorModel->addSensorData($button_sensor_id, $button_state);
             
             // 4. LOGIQUE MÉTIER : Commander le moteur en fonction de l'état du bouton
-            $action_to_perform = ($button_state == 1) ? 'ON' : 'OFF';
+            $action_to_perform = ($button_state == 0) ? 'ON' : 'OFF';
             $this->actuatorModel->toggleState($motor_actuator_id, $action_to_perform, 'system');
             
             $this->jsonResponse(['success' => true, 'message' => 'État synchronisé.']);
@@ -253,6 +253,25 @@ class ApiController extends BaseController {
         }
     }
 
+     public function getActuatorStates() {
+        // Cette API est utilisée pour le rafraîchissement, une connexion est nécessaire.
+        $this->requireLogin();
+
+        try {
+            // On récupère tous les actionneurs avec leur état le plus récent
+            $allActuators = $this->actuatorModel->findAll();
+            
+            $states = [];
+            foreach ($allActuators as $actuator) {
+                $states[$actuator['id']] = $actuator['etat'];
+            }
+            
+            $this->jsonResponse(['success' => true, 'states' => $states]);
+
+        } catch (Exception $e) {
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur serveur.'], 500);
+        }
+    }
     /**
      * Reçoit une commande manuelle depuis le site web et l'envoie au matériel.
      */
@@ -269,7 +288,6 @@ class ApiController extends BaseController {
         // 1. Mettre à jour l'état dans la base de données
         $this->actuatorModel->toggleState($actuatorId, $action, $_SESSION['user_id']);
         
-        // 2. Écrire la commande dans le fichier pour le script Python
         $commandFilePath = BASE_PATH . '/scripts/command.txt';
         if (file_put_contents($commandFilePath, $action) === false) {
             $this->jsonResponse(['error' => 'Erreur de communication avec le matériel.'], 500);
