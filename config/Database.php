@@ -13,7 +13,7 @@ class Database {
         ],
         */
                 
-
+/*
         'remote' => [
             'host' => 'localhost',
             'dbname' => '8PDuqiQ06b_bdd_serre',
@@ -26,6 +26,21 @@ class Database {
             'dbname' => '8PDuqiQ06b_bdd_serre',
             'user' => 'root',
             'pwd' => ''
+        ]
+            */
+        
+        'remote' => [
+            'host' => 'herogu.garageisep.com',
+            'dbname' => 'm0Vewl0gM0_green_puls',
+            'user' => 'IyckUxk4yF_green_puls',
+            'pwd' => 'EclQFY8uDGFY6Vbv'
+        ],
+
+        'local' => [
+            'host' => 'herogu.garageisep.com',
+            'dbname' => 'm0Vewl0gM0_green_puls',
+            'user' => 'IyckUxk4yF_green_puls',
+            'pwd' => 'EclQFY8uDGFY6Vbv'
         ]
     ];
 
