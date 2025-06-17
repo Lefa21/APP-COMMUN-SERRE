@@ -21,7 +21,10 @@ class Database {
             'user' => 'root',
             'pwd' => ''
         ]
-            /*
+           
+    ];
+
+   /*
                 'remote' => [
             'host' => '185.216.26.53',
             'dbname' => 'app_g3',
@@ -42,9 +45,6 @@ class Database {
             'pwd' => 'EclQFY8uDGFY6Vbv'
         ],
             */
-    ];
-
-  
  
     private function __construct($config) {
         try {
