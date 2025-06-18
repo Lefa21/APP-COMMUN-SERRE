@@ -23,6 +23,13 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--text-color);
+             margin: 0;
+            padding: 0;
+            background-image: url("public/images/acceuil_background.jpg"); /* Remplace par le nom de ton fichier */
+             background-size: cover;
+            background-position: bottom; /* <-- Montre le bas de l’image */
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
         
         /* Hero Section */
@@ -30,7 +37,7 @@
             background: linear-gradient(135deg, rgba(45, 90, 39, 0.9), rgba(93, 138, 84, 0.8)), 
                         url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="greenhouse" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23e8f5e8"/><stop offset="100%" style="stop-color:%23c8e6c9"/></linearGradient></defs><rect width="1200" height="600" fill="url(%23greenhouse)"/><g transform="translate(100,150)"><path d="M0,300 Q150,50 300,100 Q450,150 600,100 Q750,50 900,100 Q1050,150 1200,100 L1200,300 Z" fill="%23a5d6a7" opacity="0.7"/><g transform="translate(200,100)"><rect x="0" y="150" width="200" height="100" fill="%23ffffff" opacity="0.9" rx="10"/><path d="M0,150 Q100,100 200,150" fill="%23e8f5e8" stroke="%23388e3c" stroke-width="2"/><circle cx="50" cy="180" r="8" fill="%2366bb6a"/><circle cx="100" cy="190" r="6" fill="%2381c784"/><circle cx="150" cy="175" r="7" fill="%234caf50"/></g></g></svg>') center/cover;
             color: white;
-            min-height: 85vh;
+            min-height: 64vh;
             display: flex;
             align-items: center;
             position: relative;
@@ -269,7 +276,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
            <div class="container">
         <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= BASE_URL ?>">
-            <img src="<?= BASE_URL ?>public/images/LOGO4.png" alt="Logo Green Pulse" width="40" height="40" class="me-2">
+            <img style="border-radius: 80px;" src="<?= BASE_URL ?>public/images/LOGO4.png" alt="Logo Green Pulse" width="100" height="100" class="me-2">
             Green Pulse
         </a>
         
@@ -701,7 +708,7 @@
     </section>
 
     <!-- Contact -->
-    <section id="contact" class="py-4">
+    <section id="contact" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);" class="py-4">
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
