@@ -80,19 +80,19 @@
         </div>
         
         <div>
-            <a href="<?= BASE_URL ?? 'https://green-pulse.herogu.garageisep.com/' ?>" class="btn-home">
+            <a href="<?= BASE_URL ?? 'http://localhost/APP-COMMUN-SERRE/' ?>" class="btn-home">
                 🏠 Retour à l'accueil
             </a>
             
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="<?= BASE_URL ?? 'https://green-pulse.herogu.garageisep.com/' ?>?controller=profile" class="btn-home">
+                <a href="<?= BASE_URL ?? 'http://localhost/APP-COMMUN-SERRE/' ?>?controller=profile" class="btn-home">
                     👤 Mon profil
                 </a>
-                <a href="<?= BASE_URL ?? 'https://green-pulse.herogu.garageisep.com/' ?>?controller=auth&action=logout" class="btn-home">
+                <a href="<?= BASE_URL ?? 'http://localhost/APP-COMMUN-SERRE/' ?>?controller=auth&action=logout" class="btn-home">
                     🚪 Se déconnecter
                 </a>
             <?php else: ?>
-                <a href="<?= BASE_URL ?? 'https://green-pulse.herogu.garageisep.com/' ?>?controller=auth&action=login" class="btn-home">
+                <a href="<?= BASE_URL ?? 'http://localhost/APP-COMMUN-SERRE/' ?>?controller=auth&action=login" class="btn-home">
                     🔑 Se connecter
                 </a>
             <?php endif; ?>

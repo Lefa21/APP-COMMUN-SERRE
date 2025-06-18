@@ -10,7 +10,7 @@ HUMIDITY_SENSOR_ID = 5   # L'ID de votre capteur d'humidité
 
 SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
-API_URL_SENSORS = 'https://green-pulse.herogu.garageisep.com/?controller=api&action=syncSensors'
+API_URL_SENSORS = 'http://localhost/APP-COMMUN-SERRE/?controller=api&action=syncSensors'
 API_KEY = 'serre_admin_master_key'
 
 # Fichier utilisé comme "boîte aux lettres" pour les commandes

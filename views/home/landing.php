@@ -269,7 +269,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
            <div class="container">
         <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= BASE_URL ?>">
-            <img src="<?= BASE_URL ?>public/images/LOGO4.jpg" alt="Logo Green Pulse" width="40" height="40" class="me-2">
+            <img src="<?= BASE_URL ?>public/images/LOGO4.png" alt="Logo Green Pulse" width="40" height="40" class="me-2">
             Green Pulse
         </a>
         
