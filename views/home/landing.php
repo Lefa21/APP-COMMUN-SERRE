@@ -267,14 +267,15 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#home">
-                🌱 Serres Connectées
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+           <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= BASE_URL ?>">
+            <img src="<?= BASE_URL ?>public/images/LOGO4.jpg" alt="Logo Green Pulse" width="40" height="40" class="me-2">
+            Green Pulse
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
@@ -472,7 +473,7 @@
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
-                    <h2 class="display-5 fw-bold mb-3">Pourquoi choisir nos serres connectées ?</h2>
+                    <h2 class="display-5 fw-bold mb-3">Pourquoi choisir Green Pulse ?</h2>
                     <p class="lead text-muted">Les avantages qui font la différence</p>
                 </div>
             </div>
@@ -565,7 +566,7 @@
             
             <div class="row align-items-center mb-4">
                 <div class="col-lg-6">
-                    <h3 class="fw-bold mb-3">Projet Serres Connectées</h3>
+                    <h3 class="fw-bold mb-3">Projet Greeb Pulse</h3>
                     <p class="mb-3">
                         Notre système de gestion de serres connectées est né d'un projet commun de l'École d'ingénieurs du numérique ISEP. 
                         Développé par 30 étudiants répartis en 5 équipes, ce projet combine expertise technique et approche éco-responsable.

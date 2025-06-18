@@ -81,7 +81,7 @@ class HomeController extends BaseController {
     public function about() {
         $this->render('home/about', [
             'project_info' => [
-                'name' => 'Projet Serres Connectées',
+                'name' => 'Projet Green Pulse',
                 'version' => '1.0',
                 'team_size' => 30,
                 'technologies' => ['PHP', 'MySQL', 'Bootstrap', 'IoT', 'Arduino'],

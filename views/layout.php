@@ -118,13 +118,14 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="<?= BASE_URL ?>">
-                🌱 Serres Connectées
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= BASE_URL ?>">
+            <img src="<?= BASE_URL ?>public/images/LOGO4.jpg" alt="Logo Green Pulse" width="40" height="40" class="me-2">
+            Green Pulse
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
@@ -206,7 +207,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-4 mb-3">
-                    <h5 class="fw-bold mb-3">🌱 Serres Connectées</h5>
+                    <h5 class="fw-bold mb-3">🌱 Green Pulse</h5>
                     <p class="small">Solution innovante pour une agriculture durable et intelligente. Projet pédagogique de l'ISEP.</p>
                     <div class="d-flex gap-3">
                         <a href="#" class="text-white"><i class="bi bi-github"></i></a>
@@ -235,7 +236,7 @@
             <hr class="my-3">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <p class="mb-0 small">© 2025 Serres Connectées - ISEP. Tous droits réservés.</p>
+                    <p class="mb-0 small">© 2025 Green Pulse - ISEP. Tous droits réservés.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <small class="text-white-50">Version 1.0 - Projet étudiant</small>
