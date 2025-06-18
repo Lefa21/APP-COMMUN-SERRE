@@ -4,7 +4,7 @@ class Database {
     private static $instances = [];
     private $connection;
     private static $configs = [
-     
+     /*
         'remote' => [
             'host' => '185.216.26.53',
             'dbname' => 'app_g3',
@@ -18,7 +18,8 @@ class Database {
             'user' => 'root',
             'pwd' => ''
         ]
-/*
+            */
+
             'remote' => [
             'host' => 'herogu.garageisep.com',
             'dbname' => 'm0Vewl0gM0_green_puls',
@@ -32,7 +33,6 @@ class Database {
             'user' => 'IyckUxk4yF_green_puls',
             'pwd' => 'EclQFY8uDGFY6Vbv'
         ],
-    */
     ];
  
     private function __construct($config) {
