@@ -64,17 +64,6 @@
                         <i class="bi bi-person-plus"></i> Créer un compte
                     </a>
                 </div>
-
-                <!-- Informations de test -->
-                <div class="mt-4">
-                    <div class="alert alert-info">
-                        <small>
-                            <strong>Comptes de test:</strong><br>
-                            <strong>Admin:</strong> admin / admin123<br>
-                            <strong>Utilisateur:</strong> user1 / user123
-                        </small>
-                    </div>
-                </div>
             </div>
         </div>
 
