@@ -4,7 +4,7 @@ session_start();
 
 // Configuration de base
 define('BASE_PATH', __DIR__);
-define('BASE_URL', 'http://localhost/APP-COMMUN-SERRE/');
+define('BASE_URL', 'https://green-pulse.herogu.garageisep.com/');
 
 // 🔑 HEADERS DE SÉCURITÉ EN PREMIER (avant toute sortie HTML)
 function setSecurityHeaders() {

@@ -51,7 +51,7 @@
             La page que vous recherchez semble avoir été déplacée ou supprimée.
             Retournons à l'accueil de votre serre connectée !
         </p>
-        <a href="http://localhost/APP-COMMUN-SERRE/" class="btn btn-home">
+        <a href="https://green-pulse.herogu.garageisep.com/" class="btn btn-home">
             🏠 Retour à l'accueil
         </a>
     </div>
