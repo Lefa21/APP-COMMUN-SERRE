@@ -36,7 +36,7 @@ class HomeController extends BaseController {
         $data = [
             'sensors' => $sensors,
             'actuators' => $actuators,
-             'weather' => $weather,
+            'weather' => $weather,
             'isAdmin' => $this->isAdmin()
         ];
         

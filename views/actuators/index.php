@@ -131,10 +131,21 @@
                                     </button>
 
                                 <?php else: ?>
-                                    <!-- Pour tous les autres actionneurs (irrigation, ventilation, etc.), afficher un bouton désactivé -->
-                                    <button class="btn btn-secondary" disabled>
-                                        <i class="bi bi-eye-fill"></i> Lecture Seule
-                                    </button>
+                                     <?php if ($actuator['etat']): ?>
+                                <!-- Si l'actionneur est actif (état = 1), afficher le bouton "Arrêter" -->
+                                <button 
+                                    class="btn btn-danger"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')">
+                                    <i class="bi bi-stop-circle"></i> Arrêter
+                                </button>
+                            <?php else: ?>
+                                <!-- Si l'actionneur est inactif (état = 0), afficher le bouton "Démarrer" -->
+                                <button 
+                                    class="btn btn-success"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')">
+                                    <i class="bi bi-play-circle"></i> Démarrer
+                                </button>
+                            <?php endif; ?>
                                 <?php endif; ?>
 
                                 <!-- Bouton simulation pour les tests -->

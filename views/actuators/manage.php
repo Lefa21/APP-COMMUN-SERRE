@@ -203,13 +203,25 @@
                                     class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?>"
                                     onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
                                     <i class="bi bi-<?= $actuator['etat'] ? 'stop-circle-fill' : 'play-circle-fill' ?>"></i>
-                                    <?= $actuator['etat'] ? 'Arrêter le Moteur' : 'Démarrer le Moteur' ?>
+                                    <?= $actuator['etat'] ? 'Arrêter' : 'Démarrer' ?>
                                 </button>
 
                             <?php else: ?>
-                                <button class="btn btn-secondary" disabled>
-                                    <i class="bi bi-eye-fill"></i> Lecture Seule
+                                <?php if ($actuator['etat']): ?>
+                                <!-- Si l'actionneur est actif (état = 1), afficher le bouton "Arrêter" -->
+                                <button 
+                                    class="btn btn-danger"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'OFF')">
+                                    <i class="bi bi-stop-circle"></i> Arrêter
                                 </button>
+                            <?php else: ?>
+                                <!-- Si l'actionneur est inactif (état = 0), afficher le bouton "Démarrer" -->
+                                <button 
+                                    class="btn btn-success"
+                                    onclick="toggleActuator(<?= $actuator['id'] ?>, 'ON')">
+                                    <i class="bi bi-play-circle"></i> Démarrer
+                                </button>
+                            <?php endif; ?>
                             <?php endif; ?>
 
                         </div>
