@@ -4,20 +4,13 @@ class Database {
     private static $instances = [];
     private $connection;
     private static $configs = [
- /*
+
         'remote' => [
             'host' => '185.216.26.53',
             'dbname' => 'app_g3',
             'user' => 'g3',
             'pwd' => 'azertyg3'
         ],
-        */
-         'remote' => [
-            'host' => 'localhost',
-            'dbname' => '8PDuqiQ06b_bdd_serre',
-            'user' => 'root',
-            'pwd' => ''
-         ],
 
         'local' => [
             'host' => 'localhost',
