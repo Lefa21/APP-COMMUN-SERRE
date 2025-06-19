@@ -3,7 +3,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?= BASE_URL ?>?controller=home">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>?controller=admin&action=dashboard">Administration</a></li>
+                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>?controller=home&action=index">Administration</a></li>
                 <li class="breadcrumb-item active">Gestion des utilisateurs</li>
             </ol>
         </nav>
@@ -181,10 +181,10 @@
                                 <th>Utilisateur</th>
                                 <th>Email</th>
                                 <th>Rôle</th>
-                                <th>Équipe</th>
                                 <th>Statut</th>
+                                <th>Actions</th>
                                 <th>Activité</th>
-                                <th>Inscription</th>
+                                <th>gestion</th>
                             </tr>
                         </thead>
                         <tbody>
