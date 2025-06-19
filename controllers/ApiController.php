@@ -59,6 +59,27 @@ class ApiController extends BaseController {
         }
     }
 
+    public function getSensorStates() {
+        // L'utilisateur doit être connecté pour accéder à cette API.
+        $this->requireLogin();
+
+        try {
+            // On utilise la méthode du modèle qui récupère les capteurs actifs et leur dernière valeur.
+            $allSensors = $this->sensorModel->getAllSensorsWithLastReading();
+            
+            $states = [];
+            foreach ($allSensors as $sensor) {
+                // On crée un tableau associatif [id => valeur]
+                $states[$sensor['id']] = $sensor['value'];
+            }
+            
+            $this->jsonResponse(['success' => true, 'states' => $states]);
+
+        } catch (Exception $e) {
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur serveur.'], 500);
+        }
+    }
+
     /**
      * Endpoint pour ajouter des données de capteur (depuis microcontrôleur).
      */

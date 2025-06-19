@@ -100,7 +100,7 @@
             <div class="card-body text-center">
                 <?php if ($sensor['value'] !== null): ?>
                     <?php
-                    $valueClass = 'text-primary';
+                    $valueClass = 'text-success';
                     $status = 'Normal';
                     
                     // Déterminer la classe CSS selon la valeur et le type

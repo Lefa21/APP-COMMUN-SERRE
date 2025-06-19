@@ -259,6 +259,50 @@
         originalToggleActuator(actuatorId, action);
         updateLastModified(actuatorId);
     };
+    document.addEventListener('DOMContentLoaded', function() {
+    // --- Logique existante pour les filtres et les boutons (inchangée) ---
+    const actuatorsData = <?= json_encode($actuators) ?>;
+    // ... votre code existant pour editActuator, deleteActuator, etc. ...
+
+
+    // --- NOUVELLE LOGIQUE : Rafraîchissement automatique ---
+
+    // 1. On stocke l'état initial des actionneurs lors du chargement de la page
+    let initialStates = {};
+    actuatorsData.forEach(actuator => {
+        initialStates[actuator.id] = actuator.etat;
+    });
+
+    /**
+     * Vérifie périodiquement si l'état d'un actionneur a changé.
+     */
+    const checkActuatorStatus = () => {
+        fetch('?controller=api&action=getActuatorStates')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 2. On compare l'état actuel (reçu de l'API) avec l'état initial
+                    for (const actuatorId in data.states) {
+                        if (initialStates[actuatorId] !== undefined && initialStates[actuatorId] != data.states[actuatorId]) {
+                            console.log(`Changement détecté pour l'actionneur #${actuatorId}. Rechargement de la page...`);
+                            // 3. Si un état a changé, on recharge la page pour tout mettre à jour
+                            window.location.reload();
+                            // On arrête la vérification pour éviter des rechargements multiples
+                            return; 
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                // On ne fait rien en cas d'erreur réseau pour ne pas gêner l'utilisateur
+                console.error("Erreur de rafraîchissement automatique:", error);
+            });
+    };
+
+    // 4. On lance la vérification toutes les 3 secondes
+    setInterval(checkActuatorStatus, 3000);
+});
+    
 </script>
 
 <style>

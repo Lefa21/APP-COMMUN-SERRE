@@ -677,7 +677,7 @@ function getValueStatus(type, value) {
             if (value > 90) return { class: 'text-warning', status: 'warning' };
             return { class: 'text-success', status: 'normal' };
         default:
-            return { class: 'text-primary', status: 'normal' };
+            return { class: 'text-success', status: 'normal' };
     }
 }
 
