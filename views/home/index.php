@@ -92,8 +92,8 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
             <h3>🌡️ État des Capteurs</h3>
-            <a href="<?= BASE_URL ?>?controller=sensor&action=manage" class="btn btn-outline-primary">
-                Voir tous les capteurs
+            <a href="<?= BASE_URL ?>?controller=sensor" class="btn btn-outline-primary">
+                Voir les détails des capteurs
             </a>
         </div>
         <p class="text-muted">Données en temps réel de toutes les équipes</p>

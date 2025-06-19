@@ -72,7 +72,6 @@ class SensorController extends BaseController {
     }
     
     public function manage() {
-        $this->requireAdmin();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handleManagement();
