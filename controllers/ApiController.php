@@ -263,7 +263,7 @@ class ApiController extends BaseController {
             $this->sensorModel->addSensorData($button_sensor_id, $button_state);
             
             // 4. LOGIQUE MÉTIER : Commander le moteur en fonction de l'état du bouton
-            $action_to_perform = ($button_state == 0) ? 'ON' : 'OFF';
+            $action_to_perform = ($button_state == 0) ? 'OFF' : 'ON';
             $this->actuatorModel->toggleState($motor_actuator_id, $action_to_perform, 'system');
             
             $this->jsonResponse(['success' => true, 'message' => 'État synchronisé.']);

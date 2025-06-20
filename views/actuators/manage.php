@@ -201,7 +201,7 @@
                                 <!-- Si c'est votre moteur, afficher le bouton de contrôle ON/OFF -->
                                 <button
                                     class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?>"
-                                    onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
+                                    onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>'); toggleActuator(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>') ">
                                     <i class="bi bi-<?= $actuator['etat'] ? 'stop-circle-fill' : 'play-circle-fill' ?>"></i>
                                     <?= $actuator['etat'] ? 'Arrêter' : 'Démarrer' ?>
                                 </button>

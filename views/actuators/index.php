@@ -127,7 +127,7 @@
                                         class="btn <?= $actuator['etat'] ? 'btn-danger' : 'btn-success' ?>"
                                         onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
                                         <i class="bi bi-<?= $actuator['etat'] ? 'stop-circle-fill' : 'play-circle-fill' ?>"></i> 
-                                        <?= $actuator['etat'] ? 'Arrêter le Moteur' : 'Démarrer le Moteur' ?>
+                                        <?= $actuator['etat'] ? 'Arrêter' : 'Démarrer' ?>
                                     </button>
 
                                 <?php else: ?>
@@ -151,7 +151,7 @@
                                 <!-- Bouton simulation pour les tests -->
                                 <button
                                     class="btn btn-outline-info btn-sm mt-2"
-                                    onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'OFF' : 'ON' ?>')">
+                                    onclick="commandHardware(<?= $actuator['id'] ?>, '<?= $actuator['etat'] ? 'ON' : 'OFF' ?>')">
                                     <i class="bi bi-lightning"></i> Simuler une commande
                                 </button>
                         </div>
