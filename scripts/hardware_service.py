@@ -74,7 +74,6 @@ while True:
         
         # --- MODIFICATION ICI ---
         # On change la pause pour qu'elle soit de 10 secondes.
-        print("Attente de 10 secondes avant le prochain cycle...")
         time.sleep(1)
 
     except KeyboardInterrupt:
