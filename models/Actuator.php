@@ -81,7 +81,7 @@ class Actuator {
                  ORDER BY e.date_heure DESC 
                  LIMIT 1) as etat
             FROM actionneurs a
-            HAVING etat = 1
+            Having etat = 1
             ORDER BY a.nom
         ");
 
@@ -100,7 +100,7 @@ class Actuator {
             $this->db_remote->beginTransaction();
 
             $stmt_remote = $this->db_remote->prepare("
-                INSERT INTO etats_actionneurs (actionneur_id, etat) VALUES (?, ?)
+                INSERT INTO etats_actionneurs (actionneur_id, etat,manual) VALUES (?, ?,1)
             ");
             $stmt_remote->execute([$actuatorId, $newState]);
 
@@ -149,7 +149,7 @@ class Actuator {
      * @return bool
      */
     public function update($id, $name) {
-        $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ? WHERE id = ?");
+        $stmt = $this->db_remote->prepare("UPDATE actionneurs SET nom = ? WHERE id = ?" );
         return $stmt->execute([$name, $id]);
     }
 
